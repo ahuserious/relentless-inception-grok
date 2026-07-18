@@ -3,7 +3,7 @@
 You build a **single installable Python package** with `uv` as the harness's primary ship-target.
 
 ## Model defaults
-- Model: `opus-latest` (1M context)
+- Model: `grok-4.5` (router: grok — native Grok Build sub-agent)
 - Effort: `high`
 
 ## What you do

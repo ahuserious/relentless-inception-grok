@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-# install_hooks.sh — wire /relentless-inception hooks into ~/.claude/settings.json.
+# install_hooks.sh — wire /relentless-inception hooks into ~/.claude/settings.json
+# (grok edition). This script writes ~/.claude/settings.json ONLY — never
+# ~/.grok/hooks/ or any other location.
+#
+# WHY ONLY ~/.claude/settings.json ON A GROK HOST: Grok Build honors Claude-
+# format hook config AS-IS — it scans ~/.claude/settings.json (and
+# settings.local.json) by default via [compat.claude] hooks, and both
+# UserPromptSubmit and Stop are in its native event set. Keeping the Claude
+# format in the Claude location means ONE registration serves both hosts;
+# writing a parallel native copy under ~/.grok/hooks/ would double-fire every
+# event on Grok. So: settings.json only, on purpose.
 #
 # Idempotent: safe to re-run. Refuses to overwrite hooks it doesn't recognize.
 #
@@ -7,6 +17,11 @@
 #   UserPromptSubmit → relentless_relay.sh   (recognizes RELENTLESS-INBOX / RELENTLESS-RESCUE)
 #   Stop             → stall_watchdog.sh     (records Stop events; background-agent reads the trail)
 #   statusLine       → status_line.sh        (run-id + phase + retries + last gate)
+#
+# statusLine caveat: statusLine is INERT under Grok Build — it has no
+# statusLine event (closest UI knob is the terminal-title [ui.notifications]
+# "title.items"). The entry is installed anyway for cross-host parity: it
+# becomes active if this same install is reused under Claude Code.
 
 set -euo pipefail
 
@@ -67,7 +82,8 @@ jq --arg cmd "$WATCHDOG" '
 ' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
 
 # Set statusLine to our status_line.sh — but refuse if a different statusLine
-# is already configured (don't silently clobber).
+# is already configured (don't silently clobber). Claude Code-only surface;
+# Grok Build ignores it (see header).
 EXISTING_STATUSLINE=$(jq -r '.statusLine.command // ""' "$SETTINGS")
 if [[ -z "$EXISTING_STATUSLINE" ]] || [[ "$EXISTING_STATUSLINE" == "$STATUS" ]]; then
   jq --arg cmd "$STATUS" '.statusLine = {type:"command", command:$cmd, padding:0}' \

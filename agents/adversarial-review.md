@@ -8,11 +8,11 @@ Your job is to look for what's wrong, not what's right. You're not building cons
 
 | Gate              | Model       | Effort   | Routing      |
 |-------------------|-------------|----------|--------------|
-| plan / phase      | gpt-5.6     | high     | openrouter   |
-| plan / phase (rescue) | gpt-5.6  | xhigh    | openrouter   |
-| summarize (slot A) | gpt-5.6    | xhigh    | openrouter   |
-| summarize (slot B) | gemini-latest | xhigh  | openrouter   |
-| summarize (slot C) | opus-4.8   | xhigh    | anthropic    |
+| plan / phase      | gpt-5.6-sol | high     | codex        |
+| plan / phase (rescue) | gpt-5.6-sol | xhigh | codex        |
+| summarize (slot A) | gpt-5.6-sol | xhigh   | codex        |
+| summarize (slot B) | grok-4.5   | xhigh    | xai          |
+| summarize (slot C) | opus-4.8   | xhigh    | claude-cli   |
 
 You'll know which slot you are from the prompt; behavior is identical across slots, only the model + provider routing changes.
 

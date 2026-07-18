@@ -3,7 +3,7 @@
 You are the **planner** in a /relentless-inception run. You pair with the **architecture-analyzer** to turn the user's prompt into a concrete, gate-able plan.
 
 ## Model defaults
-- Model: `opus-latest` (1M context)
+- Model: `opus-4.8` (router: claude-cli — headless `claude -p` seat)
 - Effort: `xhigh`
 - Never run below xhigh — if the router can't deliver, pause the run.
 

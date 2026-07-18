@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
 # rescue.sh — pick up a rescue trigger and drive the 7-step rescue cycle.
 #
-# This is a STATE MACHINE — it cannot spawn Claude Code subagents on its
-# own (only the LLM-side orchestrator can do that). What it does:
+# This is a STATE MACHINE — it cannot spawn LLM subagents on its own (only
+# the LLM-side orchestrator can do that). What it does:
 #
 #   1. Claims the oldest trigger file from $RELENTLESS_INCEPTION_HOME/triggers/.
 #   2. Scaffolds the rescue cycle directory.
 #   3. Reads the trigger + the active run manifest + the last K session events
 #      into a curated bundle, written to .../rescues/<cycle>/inputs.md.
-#   4. Builds a RELENTLESS-INBOX prompt that instructs the next interactive
-#      session (post-/clear) to perform steps 1-5 of the documented rescue
-#      flow (diagnosis + consortium + triple-gate + approved.md + self-improve).
-#   5. Pipes that prompt through relentless_relay.sh's mechanism: writes to
-#      lateral-pass/pending-relentless.md and (if tmux is available) signals
-#      the relay daemon to fire /clear + paste.
+#   4. Builds a RELENTLESS-INBOX prompt that instructs a FRESH session to
+#      perform steps 1-5 of the documented rescue flow (diagnosis +
+#      consortium + fusion gate + approved.md + self-improve).
+#   5. Feature-detects the grok CLI. If present, dispatches the prompt as a
+#      FRESH headless session (grok -p ... -s <uuid>) — fresh context is the
+#      point of takeover; --resume/-r is only for the USER re-attaching to
+#      that new session afterwards. If absent, stages the prompt at
+#      $RELENTLESS_INCEPTION_HOME/lateral-pass/pending-relentless.md for the
+#      relentless_relay.sh flow and prints the manual banner.
 #
-# The LLM, upon resuming with the fresh /clear, runs steps 1-5 (calling
-# adversarial_review.sh for the gates and Agent for the consortium), writes
-# approved.md, and resumes the run from the last checkpoint.
+# The LLM, upon starting with the fresh context, runs steps 1-5 (calling
+# adversarial_review.sh for the gates and its subagent mechanism for the
+# consortium), writes approved.md, and resumes the run from the last
+# checkpoint.
 #
 # Idempotent: rescues are tracked by trigger filename; a re-invocation with
 # the same trigger file is a no-op (the file gets moved to processed/ on
@@ -25,11 +29,11 @@
 
 set -euo pipefail
 
-HOME_DIR="${RELENTLESS_INCEPTION_HOME:-$HOME/.claude/relentless-inception}"
+HOME_DIR="${RELENTLESS_INCEPTION_HOME:-$HOME/.claude/relentless-inception-grok}"
 TRIGGERS="$HOME_DIR/triggers"
 PROCESSED="$HOME_DIR/triggers/processed"
 RUNS="$HOME_DIR/runs"
-LATERAL=~/.claude/lateral-pass
+LATERAL="$HOME_DIR/lateral-pass"
 INBOX="$LATERAL/pending-relentless.md"
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -123,20 +127,21 @@ log "wrote inputs.md ($(wc -c < "$cycle_dir/inputs.md") bytes)"
   echo
   echo "1. Read \`$cycle_dir/inputs.md\` (trigger, current manifest, recent events)."
   echo "2. Read \`$run_dir/manifest.json\` to know the last successful checkpoint."
-  echo "3. Spawn the **background-agent** (codex-latest --effort medium) using its"
-  echo "   prompt at \`$SKILL_DIR/agents/background-agent.md\` with the inputs"
-  echo "   bundle. Write its output to \`$cycle_dir/diagnosis.md\`."
+  echo "3. Spawn the **background-agent** (grok-4.5 @medium via the native grok"
+  echo "   transport) using its prompt at \`$SKILL_DIR/agents/background-agent.md\`"
+  echo "   with the inputs bundle. Write its output to \`$cycle_dir/diagnosis.md\`."
   echo "4. Spawn the **rescue-agent** consortium in parallel:"
-  echo "   - Slot 'lead' (gpt-5.6 --effort xhigh via openrouter)"
-  echo "   - Slot 'copilot' (opus-latest --effort xhigh)"
+  echo "   - Slot 'lead' (gpt-5.6-sol @xhigh via the codex transport)"
+  echo "   - Slot 'co-pilot' (opus-4.8 @xhigh via the claude-cli transport)"
   echo "   Each reads \`$SKILL_DIR/agents/rescue-agent.md\` + the diagnosis."
   echo "   Outputs: \`$cycle_dir/lead-proposal.md\` and \`$cycle_dir/copilot-proposal.md\`."
-  echo "5. Run the **triple summarize gate** on the two proposals:"
+  echo "5. Run the **fusion summarize gate** on the two proposals:"
   echo "   \`$SKILL_DIR/scripts/adversarial_review.sh --gate=summarize"
   echo "    --inputs=$cycle_dir/proposals-bundle.json"
-  echo "    --models=gpt-5.6,gemini-latest,opus-4.8 --effort=xhigh"
   echo "    --out=$cycle_dir/gate-verdict.json\`"
-  echo "   All three reviewers must \`pass\` AND \`recommendation: approve\`."
+  echo "   Panel, judge, and fuser seats come from \`$HOME_DIR/fusion.config.json\`"
+  echo "   (falling back to the skill's assets default) — do NOT pass --models."
+  echo "   Pass criteria: the fused verdict JSON has \`\"verdict\": \"pass\"\`."
   echo "6. On approval, write the unified rescue plan to \`$cycle_dir/approved.md\`"
   echo "   in the format documented in references/rescue-mode.md step 4."
   echo "7. Run the self-improvement pass (step 5 of rescue-mode.md): inspect"
@@ -162,11 +167,37 @@ log "wrote inputs.md ($(wc -c < "$cycle_dir/inputs.md") bytes)"
 
 log "RELENTLESS-INBOX prompt written to $INBOX ($(wc -c < "$INBOX") bytes)"
 
-# Now signal the relay. The relay hook intercepts the next user prompt that
-# starts with RELENTLESS-INBOX. We need the body in the prompt stream — for
-# in-session rescue, the simplest mechanism is to print to stdout: the
-# user (or an outer wrapper) pastes it into the active session. For tmux
-# autonomous mode, the body of $INBOX gets pasted by the relay daemon.
+# Takeover = FRESH session. Feature-detect the grok CLI: if present, dispatch
+# the prompt headlessly into a brand-new session (-s gives it a knowable id).
+# --resume/-r is ONLY for the USER re-attaching to that new session later —
+# never for the takeover itself. Without the CLI, fall back to staging +
+# manual banner (the relentless_relay.sh flow picks the staged file up).
+if command -v grok >/dev/null 2>&1; then
+  session_id="$(uuidgen)"
+  inbox_body="$(cat "$INBOX")"
+  # Archive the staged file so the relay's manual-inject path can't re-fire
+  # the same rescue into a later interactive prompt.
+  mkdir -p "$LATERAL/archive"
+  mv "$INBOX" "$LATERAL/archive/relentless-dispatched-$(date -u +%Y%m%dT%H%M%SZ).md"
+  log "grok CLI detected — dispatching fresh headless session $session_id"
+  ( grok -p "$inbox_body" -s "$session_id" \
+      > "$cycle_dir/grok-session.log" 2>&1 </dev/null & )
+  echo
+  echo "==================================================="
+  echo "Rescue cycle $next_cycle dispatched for run $run_id."
+  echo "Trigger:  $trigger"
+  echo "Inputs:   $cycle_dir/inputs.md"
+  echo "Session:  $session_id (fresh headless Grok session)"
+  echo "Log:      $cycle_dir/grok-session.log"
+  echo
+  echo "To re-attach to the rescue session yourself (optional):"
+  echo "  grok --resume $session_id    # or: grok -r $session_id"
+  echo "(--resume/-r is for YOU re-attaching — the rescue itself is"
+  echo " already running in the fresh session above.)"
+  echo "==================================================="
+  exit 0
+fi
+
 echo
 echo "==================================================="
 echo "Rescue cycle $next_cycle prepared for run $run_id."
@@ -174,7 +205,8 @@ echo "Trigger:  $trigger"
 echo "Inputs:   $cycle_dir/inputs.md"
 echo "Prompt:   $INBOX"
 echo
-echo "Paste the contents of $INBOX into the active Claude Code session,"
+echo "grok CLI not found — manual handoff required."
+echo "Paste the contents of $INBOX into the active Grok session,"
 echo "or — if running under tmux — the relentless_relay.sh hook will pick"
 echo "it up automatically on next /clear + Enter."
 echo "==================================================="

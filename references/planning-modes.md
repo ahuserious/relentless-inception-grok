@@ -14,12 +14,12 @@ The "talk it out" mode. Conversational discovery between the planner pair and th
 2. **Constraint surfacing.** What's NOT in scope. What's locked (e.g., "must use uv-workspaces"). What's elastic (e.g., "Pine grammar wiring is best-effort"). Constraints become explicit "do not do" lines in dev-worker prompts.
 3. **Feature roster.** Concrete deliverables, in a numbered list, each with one-sentence success criteria. This is the source for the per-phase unit table.
 4. **Performance gates.** Where applicable: latency targets, memory caps, error-rate ceilings. If none apply, write "none" explicitly so the test-harness-designer knows not to invent any.
-5. **Logic check.** The planner pair adversarially debates the plan with each other (opus-latest + gpt-5.6-sol, both xhigh) for 1-3 rounds. Any unresolved disagreement is surfaced to the user at the plan gate.
+5. **Logic check.** The planner pair adversarially debates the plan with each other (opus-4.8 + gpt-5.6-sol, both xhigh) for 1-3 rounds. Any unresolved disagreement is surfaced to the user at the plan gate.
 
 Outputs:
 
-- `~/.claude/relentless-inception/runs/<run_id>/plan.md` — the human-readable plan
-- `~/.claude/relentless-inception/runs/<run_id>/manifest.json` — the machine-readable RunManifest (loadable into `orchestrator.manifest.RunManifest` if the orchestrator package is available)
+- `~/.claude/relentless-inception-grok/runs/<run_id>/plan.md` — the human-readable plan
+- `~/.claude/relentless-inception-grok/runs/<run_id>/manifest.json` — the machine-readable RunManifest (loadable into `orchestrator.manifest.RunManifest` if the orchestrator package is available)
 
 ### Interactive controls
 

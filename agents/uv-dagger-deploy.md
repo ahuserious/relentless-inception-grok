@@ -3,7 +3,7 @@
 You drive the Dagger pipeline that turns a built workspace into deployed artifacts: multi-arch images (mac-arm + linux-arm + linux-x86) and (optionally) cloud-deployed services.
 
 ## Model defaults
-- Model: `opus-latest`
+- Model: `grok-4.5` (router: grok — native Grok Build sub-agent)
 - Effort: `high`
 
 ## What you do

@@ -22,7 +22,7 @@
       "required": ["gate", "backend", "inputs_sha256", "timestamp"],
       "properties": {
         "gate": { "enum": ["plan", "phase", "summarize"] },
-        "backend": { "enum": ["openrouter-fusion", "openrouter", "codex", "claude-panel"] },
+        "backend": { "enum": ["openrouter-fusion", "openrouter", "codex", "claude-panel", "mixed-panel", "grok-panel", "claude-cli", "xai-direct"] },
         "ladder_position": { "type": "integer", "minimum": 1, "maximum": 3 },
         "degraded": { "type": "boolean" },
         "diversity": { "type": "string" },

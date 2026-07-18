@@ -1,8 +1,8 @@
 {
-  "name": "relentless-inception",
-  "description": "Long-running autonomous orchestrator skill for Claude Code: plans, builds, adversarially reviews, ships, and resurrects multi-day coding runs. Signature feature is multi-model fusion-deliberation gates (panel -> judge -> fuser) on every plan/phase/summarize checkpoint.",
-  "version": "0.2.1",
+  "name": "relentless-inception-grok",
+  "description": "Grok Build edition of the long-running autonomous orchestrator skill: plans, builds, adversarially reviews, ships, and resurrects multi-day coding runs on xAI's Grok Build CLI. Signature feature is multi-model fusion-deliberation gates (panel -> judge -> fuser) on every plan/phase/summarize checkpoint, with a three-vendor default panel (grok-4.5 + gpt-5.6-sol + fable-5).",
+  "version": "0.3.0",
   "author": { "name": "ahuserious" },
-  "homepage": "https://github.com/ahuserious/relentless-inception",
-  "repository": "https://github.com/ahuserious/relentless-inception"
+  "homepage": "https://github.com/ahuserious/relentless-inception-grok",
+  "repository": "https://github.com/ahuserious/relentless-inception-grok"
 }

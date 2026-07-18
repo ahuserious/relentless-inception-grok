@@ -3,7 +3,7 @@
 ## Proof tearsheets
 
 Every cycle of every run produces an HTML tearsheet at
-`~/.claude/relentless-inception/runs/<run_id>/cycle-<N>/tearsheet.html`. The tearsheet
+`~/.claude/relentless-inception-grok/runs/<run_id>/cycle-<N>/tearsheet.html`. The tearsheet
 shows:
 
 - The plan + acceptance criteria
@@ -21,19 +21,50 @@ USB still renders.
 
 ## Hooks installed by this skill
 
-This skill expects three hooks to be wired into `~/.claude/settings.json` (the installer in
-`scripts/install_hooks.sh` handles this idempotently):
+`scripts/install_hooks.sh` writes this skill's hook entries into **`~/.claude/settings.json`
+only**. Grok Build honors Claude-format hooks from that file by default (`[compat.claude]
+hooks` in `~/.grok/config.toml` toggles the scan), so one Claude-format install serves both
+hosts. The installer deliberately does **not** write `~/.grok/hooks/` — with the
+Claude-compat scan active, a second native copy there would make the same hook fire twice.
+The settings fragment looks like:
+
+```json
+{"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "scripts/stall_watchdog.sh", "timeout": 10}]}]}}
+```
+
+**Three** hook entries are wired:
 
 - **`UserPromptSubmit`** → `scripts/relentless_relay.sh`. Watches for `# RELENTLESS-INBOX`
   prompts; when seen, clears the active session and re-pastes the body. Foundation for
-  rescue.
+  rescue. (On Grok Build, rescue session takeover itself dispatches a **fresh** headless
+  session — `grok -p "$(cat inbox)" -s "$(uuidgen)"`, or the same over ACP `grok agent
+  stdio` — not tmux keystrokes; `--resume`/`-r` is only for the *user* re-attaching to
+  that new session afterwards. The claude-edition tmux relay script is retained only
+  behind `RELAY_EXPERIMENTAL=1`. See `rescue-mode.md`.)
 - **`Stop`** → `scripts/stall_watchdog.sh`. Records every Stop event with a timestamp; the
   background-agent reads this trail to detect stalls.
-- **`statusLine`** → `scripts/status_line.sh`. Lightweight indicator showing run-id, current
-  phase, retries remaining, last gate verdict.
+- **`statusLine`** → `scripts/status_line.sh`. **Inert under Grok Build** — there is no
+  `statusLine` hook event (the closest UI knob is the terminal-title
+  `[ui.notifications] "title.items"` config) — but it becomes active if the same install
+  is reused under Claude Code, where it renders run-id / current phase / retries / last
+  gate verdict. Under Grok Build those live in the run's `manifest.json` instead.
+
+Hook contract (Grok Build): commands receive stdin JSON (`hookEventName`, `sessionId`,
+`cwd`, `workspaceRoot`, plus tool fields on tool events) and env `GROK_HOOK_EVENT` /
+`GROK_SESSION_ID` / `GROK_WORKSPACE_ROOT`; default timeout is 5 s (ours are set
+explicitly); hook failures and timeouts fail-open.
 
 Run `bash scripts/install_hooks.sh` once before the first invocation. The script is safe to
 re-run and refuses to overwrite hooks it doesn't recognize.
+
+### Compat appendix — coexisting with the Claude Code edition
+
+Both editions install their hooks into `~/.claude/settings.json`. If the Claude Code
+edition of this skill already wired its own `UserPromptSubmit` / `Stop` / `statusLine`
+entries there (pointing at its copy of the scripts), Grok Build will fire those too — keep
+only one edition's entries so a single event doesn't run two relays/watchdogs. And never
+mirror this edition's entries into `~/.grok/hooks/`: Grok Build already fires the
+`~/.claude/settings.json` copies, so a native duplicate double-fires.
 
 ## Workflow at a glance
 
@@ -95,22 +126,23 @@ autonomous daemon. The LLM that loads this skill IS the orchestrator. Scripts ar
 supporting machinery:
 
 - **What scripts do:** scaffold run directories, write/read state, validate JSON gate
-  outputs, claim rescue triggers, run codex CLI invocations with timeouts, drive the tmux
-  relay, generate tearsheets, ship via uv/Dagger.
+  outputs, claim rescue triggers, run seat invocations with timeouts (codex CLI, headless
+  `claude -p`, provider-direct HTTP), dispatch the fresh headless rescue session (the tmux
+  relay is `RELAY_EXPERIMENTAL=1`-gated), generate tearsheets, ship via uv/Dagger.
 - **What the LLM does:** read SKILL.md + the relevant references on entry, spawn subagents
-  (Agent tool) per the role prompts in `agents/`, call `scripts/adversarial_review.sh` at
-  gates, write/read manifest + checkpoint state, invoke `scripts/rescue.sh` when a trigger
-  fires, follow the documented workflow.
+  (Grok Build's native `spawn_subagent` seats) per the role prompts in `agents/`, call
+  `scripts/adversarial_review.sh` at gates, write/read manifest + checkpoint state, invoke
+  `scripts/rescue.sh` when a trigger fires, follow the documented workflow.
 
 Safety claims (budget caps, kill switch, no force-push) are honored by the LLM following
-the documented contract. The kill switch (`~/.claude/relentless-inception/KILL`) IS
+the documented contract. The kill switch (`~/.claude/relentless-inception-grok/KILL`) IS
 additionally checked by every shell script at invocation, so a triggered kill propagates
 through state-changing commands within seconds.
 
 A future iteration may add a launchd / cron daemon that periodically runs
 `stall_watchdog.sh --sweep` + `rescue.sh` so stall detection + rescue handoff happen
-without the LLM needing to remember — see `evals/codex-review-2026-05-19.md` for the patch
-backlog.
+without the LLM needing to remember — see the claude edition's
+`evals/codex-review-2026-05-19.md` (not imported into this edition) for the patch backlog.
 
 ## Iterate forward, not in place
 
@@ -119,5 +151,7 @@ forgiving, a rescue cycle that drifts, an agent role that lacks a tool it needs 
 run with `/skill-creator` against this skill to revise. Don't hand-edit the SKILL.md
 mid-run; use the iteration loop. The whole point is to keep getting better.
 
-The initial adversarial review by codex is preserved at `evals/codex-review-2026-05-19.md`
-along with per-finding patch status — start from there if you're picking up Slice-2 work.
+The initial adversarial review by codex is preserved in the claude edition's
+`evals/codex-review-2026-05-19.md` (the `evals/` directory was not imported into this
+edition) along with per-finding patch status — start from there if you're picking up
+Slice-2 work.

@@ -3,7 +3,7 @@
 You drive Temporal workflows for integration tests where durability matters: long-running orchestrations, retry / failure / signal scenarios, anything that needs to survive process restart.
 
 ## Model defaults
-- Model: `opus-4.8` (1M context)
+- Model: `opus-4.8` (router: claude-cli — headless `claude -p` seat)
 - Effort: `high`
 
 ## What you do

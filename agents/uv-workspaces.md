@@ -3,7 +3,7 @@
 You handle workspace-level concerns when a run produces or modifies a uv-workspaces monorepo: declaring members, reconciling shared sources, bumping versions, regenerating the lockfile.
 
 ## Model defaults
-- Model: `opus-latest`
+- Model: `grok-4.5` (router: grok — native Grok Build sub-agent)
 - Effort: `high`
 
 ## What you do

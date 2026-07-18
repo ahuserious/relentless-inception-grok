@@ -40,14 +40,29 @@ Machine-side merge rules (enforced by `scripts/adversarial_review.sh`):
 - Panel collapse to 1 live seat → **fail-closed + escalate**. Fusion failure/refusal →
   escalate to a stronger fuser or the human. Never auto-pass.
 
-## Provider ladder
+## Provider ladder (Grok Build edition)
 
 `check_prereqs.sh` probes all rungs once at preflight and writes a capability report to
 the run manifest (`gate_capability`). Each gate uses the highest live rung; every descent
 is recorded in the verdict's `_meta.ladder_position` + `degraded` flags. **A dead rung is
 never a reason to skip a gate.**
 
-### Rung 1 — OpenRouter fusion (one HTTP call, server-side fan-out)
+The host is Grok Build, so the execution split differs from the claude edition:
+`adversarial_review.sh` runs every seat it can drive itself from `secrets.env` +
+subscription CLIs — the four **direct HTTP transports** (`xai`, `openai`, `anthropic`,
+`openrouter`) plus `codex` and `claude-cli` — then hands off via typed exit codes:
+
+- **Exit 42** — runnable seats (codex/direct/claude-cli) + judge are done; the host
+  orchestrator (which *is* Grok) runs the deferred `grok`-transport seats (native Grok
+  Build sub-agents) and any `grok-session` fuser fallback from `$OUT.prefusion.json`,
+  then stamps and writes the verdict.
+- **Exit 43** — descend to the rung-3 grok-panel floor; the host runs the whole floor
+  protocol from `$OUT.grok-panel.json`.
+
+This is the same deferred-seat handoff the claude edition used for its claude seats, now
+pointed at grok seats.
+
+### Rung 1 — OpenRouter fusion (unchanged; one HTTP call, server-side fan-out)
 
 `POST https://openrouter.ai/api/v1/chat/completions` with `model:"openrouter/fusion"` and
 `plugins:[{id:"fusion", analysis_models:[<3-5 cross-vendor panel>], model:"<judge>",
@@ -55,56 +70,96 @@ reasoning:{effort:...}, temperature:...}]`. `reasoning`/`temperature` live INSID
 plugin config where required; request-level `models:["openrouter/fusion","<judge>"]`
 degrades router downtime to a single judge-model call instead of hard-failing. Pricing =
 N panel + 2× judge (the outer fuser call also runs the judge model). Persist the returned
-completion + generation id in the gate dir — this rung bypasses local logging.
-Probe semantics: HTTP 400 on a schema-valid minimal body = config bug (fix, don't
-descend); 402 = no credits → descend to rung 2.
+completion + generation id in the gate dir — this rung bypasses local logging. Key:
+`OPENROUTER_API_KEY` from `secrets.env`. Probe semantics: HTTP 400 on a schema-valid
+minimal body = config bug (fix, don't descend); 402 = no credits → descend to rung 2.
 
-### Rung 2 — codex panel (sol | luna | terra, ANY effort)
+### Rung 2 — mixed direct+subscription panel (THE RECOMMENDED DEFAULT)
 
-Prerequisite (checked at preflight, see `check_prereqs.sh`): codex CLI ≥0.142 logged in
-(`codex login status`), and at least one of the **gpt-5.6 family** seats live. The skill
-owns the alias map — bare names are NOT codex aliases:
+Any combination of seats across five transports — the panel need not be single-vendor and
+should not be. This is the new default rung: cross-vendor diversity decorrelates panel
+errors, and every transport here is one the script drives itself (only the optional `grok`
+native seats defer to the host). Each transport needs its credential *present* in
+`secrets.env` (presence-only check — never echoed):
 
-```
-sol   → gpt-5.6-sol
-luna  → gpt-5.6-luna
-terra → gpt-5.6-terra
-```
+- **`xai` — direct xAI HTTP (the panel-expert seat).** Verified live 2026-07-18 with a
+  real key (treat as ground truth): `GET https://api.x.ai/v1/models` → 200 (slugs include
+  `grok-4.5`, `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`,
+  `grok-4.20-multi-agent-0309`, `grok-build-0.1`); `POST https://api.x.ai/v1/chat/completions`
+  is OpenAI-compatible and `grok-4.5` **accepts `reasoning_effort:"xhigh"`** (200;
+  `usage.completion_tokens_details.reasoning_tokens` present; prompt caching active via
+  `cached_tokens`). Auth: `Authorization: Bearer $XAI_API_KEY`. Default panel-expert slug
+  = `grok-4.5` @ xhigh; the other verified slugs are valid config values.
 
-**Any effort level is accepted** (`minimal|low|medium|high|xhigh|ultra` — the CLI enum;
-codex validates lazily at turn start, so the preflight live-probes each requested
-model+effort pair with `--ephemeral` rather than trusting help output). There is no
-`--effort` flag on codex ≥0.142: effort is `-c model_reasoning_effort=<level>`.
+- **`codex` — codex CLI via ChatGPT subscription (unchanged).** Prereq: codex CLI ≥0.144
+  logged in (`codex login status`), ≥1 **gpt-5.6 family** seat live. The skill owns the
+  alias map — bare names are NOT codex aliases:
 
-Per-seat invocation (also usable through the Claude codex plugin's companion,
-`node $CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs task --model gpt-5.6-<seat> --effort <level> ...`,
-plugin `codex@openai-codex` ≥1.0.3):
+  ```
+  sol   → gpt-5.6-sol
+  luna  → gpt-5.6-luna
+  terra → gpt-5.6-terra
+  ```
 
-```
-codex exec -m gpt-5.6-<seat> -c model_reasoning_effort=<level> \
-  -s read-only --skip-git-repo-check -C <artifact-dir> \
-  --json -o <seat-out.md> "<panelist prompt>"
-```
+  **Any effort accepted** (`minimal|low|medium|high|xhigh|ultra`); codex validates lazily
+  at turn start, so preflight live-probes each model+effort pair with `--ephemeral`. There
+  is no `--effort` flag on codex ≥0.144 — effort is `-c model_reasoning_effort=<level>`,
+  and `codex exec -` reads the panelist prompt from **stdin**:
 
-Judge + fuser: prefer a cross-vendor split (judge = cheap codex seat or local Claude
-subagent; fuser = strongest Claude/Fable available — never the same model instance as the
-judge). Seats run as parallel background invocations; sequential is acceptable at N=3.
+  ```
+  codex exec -m gpt-5.6-<seat> -c model_reasoning_effort=<level> \
+    -s read-only --skip-git-repo-check --ephemeral \
+    -o <seat-out.md> - < <panelist-prompt-file>
+  ```
 
-### Rung 3 — fresh-context Claude subagent panel (sanctioned degraded mode)
+- **`claude-cli` — NEW headless `claude -p` seat via Claude subscription** (or
+  `ANTHROPIC_API_KEY`). Read-only, timeout-bounded review seat — prompt on **stdin**
+  (invocation verified locally on claude CLI 2.1.214; there is no `--max-turns` flag):
 
-The v0.1 run improvised this; v0.2 makes it the recorded, rule-bound floor:
+  ```
+  claude -p --model claude-fable-5 --effort xhigh \
+    --allowedTools "Read" --permission-mode dontAsk \
+    --output-format json < <panelist-prompt-file>
+  ```
 
-- N=4 fresh-context subagent panelists (self-fusion knee), diversity via **disjoint
-  context bundles + distinct adversarial personas**: fact-drop hunter · constraint
-  auditor · mechanical re-verifier · minority-finding advocate.
-- Judge = 1 cheap fresh subagent. Fuser = fresh strongest-model subagent at xhigh, a
-  DIFFERENT instance from every panelist.
+  Model rule: fable-5 / opus-4.8 only (no `-latest` aliases for new content); the driver
+  resolves the config names to `--model` slugs `claude-fable-5` / `claude-opus-4-8` (both
+  verified accepted on 2.1.214; short aliases `fable`/`opus` resolve to the same). Extract
+  the verdict via `jq -r '.result'`; non-zero exit on auth/tool denial writes an explicit
+  fail.
+
+- **`openai` — direct OpenAI HTTP.** `POST https://api.openai.com/v1/chat/completions`,
+  **gpt-5.6 family only** (sol default; luna/terra valid config values, never in defaults).
+  Auth: `Authorization: Bearer $OPENAI_API_KEY`.
+
+- **`anthropic` — direct Anthropic HTTP.** `POST https://api.anthropic.com/v1/messages`,
+  **fable-5 / opus-4.8 only**. Auth: `x-api-key: $ANTHROPIC_API_KEY`.
+
+Judge + fuser: prefer a cross-vendor split (judge = cheap seat on any live transport;
+fuser = strongest available — never the same model instance as the judge, never the
+artifact author's model). Seats run as parallel background invocations; sequential is
+acceptable at N=3. The `xai` panel-expert seat is the recommended anchor of every default
+panel.
+
+### Rung 3 — grok-panel floor (sanctioned degraded, single-provider)
+
+When no cross-vendor transport is live, the sanctioned floor is a fresh **Grok** sub-agent
+panel — the host's own native seats, so it always exists (nc-harness improvised a
+single-provider floor; v0.3.0-grok makes it rule-bound):
+
+- N=4 fresh-context **grok** sub-agent panelists (self-fusion knee), diversity via
+  **disjoint context bundles + distinct adversarial personas**: fact-drop hunter ·
+  constraint auditor · mechanical re-verifier · minority-finding advocate.
+- Judge = 1 cheap fresh grok sub-agent. Fuser = a fresh **grok-session** sub-agent at
+  xhigh, a DIFFERENT instance from every panelist.
+- These are `grok`-transport seats: the script defers the whole floor via **exit 43** and
+  the host runs the floor protocol from `$OUT.grok-panel.json`.
 - Concurrency cap ≤2 on the fan-out (session throttling), hard iteration caps on every loop.
 - Every verdict stamped `"degraded": true, "diversity": "single-provider"`.
 
 ## Per-gate configuration
 
-Precedence: inline flags > `.claude/relentless.config.json` > skill defaults.
+Precedence: inline flags > `~/.claude/relentless-inception-grok/fusion.config.json` > skill defaults.
 
 | Gate | N | Effort | Panelist tools | Timeout/seat | Mandatory extras |
 |------|---|--------|----------------|--------------|------------------|
@@ -130,9 +185,9 @@ garbage-in). The fused gate verdict:
   "mechanical_verification": [{"cmd": "...", "exit_code": 0}],
   "dissent_reasons": [],
   "_meta": {
-    "gate": "plan|phase|summarize", "backend": "openrouter-fusion|codex|claude-panel",
+    "gate": "plan|phase|summarize", "backend": "openrouter-fusion|mixed-panel|grok-panel",
     "ladder_position": 1, "degraded": false,
-    "panel": [{"seat": "A", "model": "...", "effort": "...", "degraded": false}],
+    "panel": [{"seat": "A", "model": "...", "transport": "xai|codex|claude-cli|openai|anthropic|grok", "effort": "...", "degraded": false}],
     "judge_model": "...", "fuser_model": "...",
     "inputs_sha256": "...", "timestamp": "...", "iteration": 1, "est_usd": 0.0
   }
@@ -176,26 +231,46 @@ probes, and fail-closed everywhere.
 
 ---
 
-## v0.2.1 — user-configurable panels (config + secrets)
+## v0.3.0-grok — user-configurable panels (config + secrets)
 
-The panel/judge/fuser composition is now read from **`~/.claude/relentless-inception/fusion.config.json`**
+The panel/judge/fuser composition is read from **`~/.claude/relentless-inception-grok/fusion.config.json`**
 (user copy; shipped default at `assets/fusion.config.default.json`) and secrets from
-**`~/.claude/relentless-inception/secrets.env`** (template `assets/secrets.env.example`, chmod 600 —
-`OPENROUTER_API_KEY` lives there, never in configs).
+**`~/.claude/relentless-inception-grok/secrets.env`** (template `assets/secrets.env.example`,
+chmod 600). That secrets file holds all four provider keys —
+`XAI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENROUTER_API_KEY` — and the
+template ships every line BLANK. A key never appears in any config json, script default,
+or repo file; the harness only ever checks a key's *presence*, never its value.
 
-**Default panel (v0.2.1)**: 1× fable-5 (claude) + 1× gpt-5.6-sol @ xhigh (codex) +
-1× opus-4.8 @ xhigh (claude); raise counts to 2 per seat for heavier gates. **luna/terra
-are out of the default** (weaker than sol) but stay valid config values. Judge default =
-fable-5 (user preference; empirically a cheap judge costs nothing, so downgrading is
-always safe). **Fuser = the model currently selected in Claude Code** (`claude-code-session`),
-run as a fresh instance distinct from the judge and from the artifact's author.
+**Default panel (3 vendors, v0.3.0-grok)**: 1× `grok-4.5` @ xhigh via the `xai` direct
+transport (the panel-expert seat, verified above) + 1× `gpt-5.6-sol` @ xhigh via `codex` +
+1× `fable-5` @ xhigh via `claude-cli`; raise counts to 2 per seat for heavier gates.
+**luna/terra stay out of the default** (weaker than sol) but remain valid config values,
+as do the other verified xAI slugs. **Judge default** = `fable-5` @ low via `claude-cli`
+(empirically a cheap judge costs nothing, so downgrading is always safe); fallback = a
+cheap `grok` seat if the Claude CLI is absent. **Fuser default** = `fable-5` @ xhigh via
+`claude-cli` (the strongest available model is the lever — ~18-pt swing), run as a fresh
+instance distinct from the judge and from the artifact's author; **sanctioned fallback** =
+`grok-session` (the Grok Build session model) when the Claude CLI is absent. Fuser
+provenance is always recorded in `_meta.fuser_model` + transport.
 
-Execution split: `adversarial_review.sh` runs the codex/openrouter seats from the config
-and exits 42 with the pre-fusion bundle; the orchestrator runs the claude-transport
-seats, the judge, and the fuser as subagents, then stamps and writes the verdict.
-Backends toggle via `backends.codex_plugin` / `backends.openrouter` — either or both.
+Execution split: `adversarial_review.sh` runs the seats it can drive itself — the `xai` /
+`openai` / `anthropic` / `openrouter` direct-HTTP seats plus `codex` and `claude-cli` —
+from the config, then exits with a typed code: **42** = runnable seats + judge done — the
+host Grok orchestrator runs the deferred `grok`-native seats (and any `grok-session`
+fuser fallback) from `$OUT.prefusion.json`, then stamps and writes the verdict; **43** =
+descend to the rung-3 grok-panel floor — the host runs the whole floor protocol from
+`$OUT.grok-panel.json`. Backends toggle per transport in the config
+(`backends.grok_native`, `backends.claude_cli`, `backends.codex`, `backends.xai_direct`,
+`backends.openai_direct`, `backends.anthropic_direct`, `backends.openrouter`) — any
+combination.
 
-Temperature (openrouter-direct only): panel 1.0 / judge pinned 0. Do not temp-tune
-reasoning models (OpenAI o-series & gpt-5.x reasoning ignore/reject it; Claude extended
-thinking requires temp=1; DeepSeek-R1/Gemini thinking manage sampling internally) — and
-temperature is NOT a diversity mechanism; vary models/personas instead.
+Context note: context under Grok Build is per-model — `grok-4.5` (the default session
+model) has a 500K window, `grok-build-0.1` 256K, and the `grok-4.3` / `grok-4.20` family
+1M. The 500K default is half the 1M the claude edition routed to, so summarize-gate
+pressure is higher — keep the compaction cadence tighter (see `references/rescue-mode.md`
+and the summarize-gate row).
+
+Temperature (openrouter + direct-HTTP only): panel 1.0 / judge pinned 0. Do not temp-tune
+reasoning models (OpenAI gpt-5.x reasoning & xAI grok-4.x reasoning ignore/reject it;
+Claude extended thinking requires temp=1; DeepSeek-R1/Gemini thinking manage sampling
+internally) — and temperature is NOT a diversity mechanism; vary models/personas instead.

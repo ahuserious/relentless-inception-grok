@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# status_line.sh — lightweight statusLine indicator for /relentless-inception.
+# status_line.sh — lightweight statusLine indicator for /relentless-inception
+# (grok edition).
 #
 # Shows: model + active run-id + current phase + retries remaining + last
 # gate verdict. Silent (prints nothing) when no run is active.
 #
 # Claude Code calls this with a JSON payload on stdin; we read the model from
-# there and the run state from the runs/ directory.
+# there and the run state from the runs/ directory. Grok Build has NO
+# statusLine surface, so under a Grok host this script is simply never
+# invoked — kept for cross-host parity when the user opens Claude Code.
 
 set -uo pipefail
 
@@ -17,7 +20,7 @@ else
   model="claude"
 fi
 
-RUNS_DIR=~/.claude/relentless-inception/runs
+RUNS_DIR="${RELENTLESS_INCEPTION_HOME:-$HOME/.claude/relentless-inception-grok}/runs"
 
 # Find the most recently modified manifest.json — that's the active run.
 manifest=""
@@ -59,5 +62,8 @@ if [[ "$retries" != "0" ]] && [[ "$retries" != "?" ]]; then
   retries_part=" ${WARN_COLOR}retries:$retries${RESET}"
 fi
 
-printf '%s ${RUN_COLOR}[%s]${RESET} ${PHASE_COLOR}%s${RESET}%s last:%s' \
-  "$model" "$run_id" "$current_phase" "$retries_part" "$last_verdict"
+# (Pre-existing bug fixed during the grok port: the color variables were
+# inside a single-quoted format string and printed literally.)
+printf '%s %s[%s]%s %s%s%s%s last:%s' \
+  "$model" "$RUN_COLOR" "$run_id" "$RESET" \
+  "$PHASE_COLOR" "$current_phase" "$RESET" "$retries_part" "$last_verdict"

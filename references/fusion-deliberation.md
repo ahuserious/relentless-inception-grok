@@ -22,16 +22,20 @@ model plus what a live gate actually looks like.
   bundles). Diversity of *context*, not just of models, is what decorrelates panel errors.
 - **Panel** — N independent panelists, each a *complete standalone review* from a distinct
   model and adversarial persona (fact-drop hunter · constraint auditor · mechanical
-  re-verifier · minority-finding advocate). Default panel: 1× `fable-5` + 1× `gpt-5.6-sol`
-  @xhigh + 1× `opus-4.8` @xhigh.
+  re-verifier · minority-finding advocate). Default panel (3 vendors): 1× `grok-4.5` @xhigh
+  via the `xai` direct transport (the panel-expert seat) + 1× `gpt-5.6-sol` @xhigh via
+  `codex` + 1× `fable-5` @xhigh via `claude-cli`.
 - **Judge** — one *cheap* model. Emits compact JSON only (`consensus`, `contradictions`,
   `blind_spots`, `verdict_tally`, …) — **never a verdict**. The judge barely moves quality, so
-  cheap is always safe (default `fable-5` @low).
+  cheap is always safe (default `fable-5` @low via `claude-cli`; fallback a cheap `grok` seat
+  if the Claude CLI is absent).
 - **Fuser** — one *strongest available* model, a fresh instance that must differ from the judge
   and from the artifact's author. Writes a **generative synthesis**, not a vote or an average —
   it must **preserve lone-correct minority findings** (the single panelist who caught the real
-  flaw is exactly what averaging destroys). Runs as `claude-code-session`, so set your session
-  to your strongest model (`/model fable`, `/effort xhigh`) before the run.
+  flaw is exactly what averaging destroys). Default = `fable-5` @xhigh via `claude-cli` (the
+  strongest available model is the lever — ~18-pt swing); sanctioned fallback = `grok-session`
+  (the Grok Build session model) when the Claude CLI is absent. Fuser provenance is always
+  recorded in the ledger.
 
 Design empirics (TrustedRouter DRACO artifact, `ahuserious/trustedrouter-fusion-artifact`): the
 **fuser is the lever** (~18-pt swing), the **judge barely matters**, voting/averaging are
@@ -40,18 +44,26 @@ models/personas.
 
 ## What a live gate looks like
 
-Invoking a gate with the session on Fable 5 (note `Fable 5` in the status line, the run id
-`nc-harness-p1b-...`, and the `prd-gap-fusion-plan` gate about to fire):
+> **These two screenshots were captured in the Claude Code edition** of this skill, where the
+> session/fuser ran as the Claude Code session model (Fable 5). The Grok Build edition runs the
+> **identical** Map → Panel → Fuse pipeline; only the orchestrator (Grok) and the seat
+> transports differ — the grok-edition default panel is `grok-4.5` (xai) + `gpt-5.6-sol`
+> (codex) + `fable-5` (claude-cli), with the fuser default `fable-5` @xhigh via `claude-cli`
+> (fallback `grok-session`). Read the captures as a faithful picture of the same machinery.
 
-![Invoking a fusion gate with the session on Fable 5](../docs/img/fusion-invoke-fable.png)
+Invoking a gate with the session on Fable 5 (note `Fable 5` in the status line, the run id
+`nc-harness-p1b-...`, and the `prd-gap-fusion-plan` gate about to fire) — Claude Code edition:
+
+![Invoking a fusion gate with the session on Fable 5 (Claude Code edition capture)](../docs/img/fusion-invoke-fable.png)
 
 The gate running — Map ✓ and Panel ✓ complete, Fuse in progress. The Fuse phase shows the two
 synthesis seats: `judge:fable-low` (Fable 5, done — 45.6k tokens, 37s) and `fuser:fable-xhigh`
-(Fable 5 session model, just starting):
+(the Claude Code session model, just starting):
 
-![A fusion gate mid-run: Map and Panel done, Fuse in progress](../docs/img/fusion-panel-fuse.png)
+![A fusion gate mid-run: Map and Panel done, Fuse in progress (Claude Code edition capture)](../docs/img/fusion-panel-fuse.png)
 
-Reading the panels:
+Reading the panels (the seat names below are the Claude-edition capture; the grok-edition
+transport mapping is in the table further down):
 
 - **Header** — `prd-gap-fusion-plan · PRD-vs-built gap scan with sol/fable/opus fusion
   deliberation · 6/7 agents · 10m26s`. `sol/fable/opus` is the default panel; `6/7 agents` is
@@ -64,11 +76,31 @@ Reading the panels:
 
 ## Where each seat is configured
 
-Panel / judge / fuser composition lives in `~/.claude/relentless-inception/fusion.config.json`
-(shipped default: `assets/fusion.config.default.json`). The full seat → transport → UI-label
-mapping is in `references/setup.md#4-configure-the-panel`. The structured output of every
-seat/judge/fuser call validates against `assets/verdict.schema.json` before aggregation, and
-every call is stamped with full provenance (`panel`, `judge_model`, `fuser_model`,
+Panel / judge / fuser composition lives in
+`~/.claude/relentless-inception-grok/fusion.config.json` (shipped default:
+`assets/fusion.config.default.json`), with all four provider keys in
+`~/.claude/relentless-inception-grok/secrets.env` (chmod 600). The full seat → transport →
+UI-label mapping is in `references/setup.md#4-configure-the-panel`.
+
+Seat → transport map (Grok Build edition — seven transports). `adversarial_review.sh` drives
+every transport except `grok` itself; `grok`-transport seats defer to the host orchestrator
+via the exit-42 handoff:
+
+| Transport | Where it runs | Default role | Example model | Credential (presence-only) |
+|-----------|---------------|--------------|---------------|----------------------------|
+| `xai` | script → `api.x.ai` direct HTTP (OpenAI-compatible; `reasoning_effort:"xhigh"` verified) | **panel expert** | `grok-4.5` @xhigh | `XAI_API_KEY` |
+| `codex` | script → codex CLI (ChatGPT subscription) | panel | `gpt-5.6-sol` @xhigh | codex login |
+| `claude-cli` | script → headless `claude -p` (Claude subscription) | panel · judge · **fuser** | `fable-5` @xhigh | Claude login / `ANTHROPIC_API_KEY` |
+| `openai` | script → `api.openai.com` direct HTTP | optional panel | `gpt-5.6-*` | `OPENAI_API_KEY` |
+| `anthropic` | script → `api.anthropic.com` direct HTTP | optional panel | `fable-5` / `opus-4.8` | `ANTHROPIC_API_KEY` |
+| `openrouter` | script → `openrouter.ai` direct HTTP | rung-1 fusion | `openrouter/fusion` | `OPENROUTER_API_KEY` |
+| `grok` | **host orchestrator** via exit-42 (native sub-agents) | rung-3 floor · fuser fallback (`grok-session`) | `grok-4.5` / session | none (native seats) |
+
+Model rules (hard): OpenAI/GPT seats = gpt-5.6 family only; Anthropic = fable-5 / opus-4.8
+only (no `-latest` aliases for new content); xAI panel-expert slug = `grok-4.5` (other
+verified slugs are valid config values). The structured output of every seat/judge/fuser call
+validates against `assets/verdict.schema.json` before aggregation, and every call is stamped
+with full provenance (`panel` incl. per-seat `transport`, `judge_model`, `fuser_model`,
 `inputs_sha256`, ladder position, degradation flags) into the run's `ledger.jsonl`.
 
 ## Why it earns its place

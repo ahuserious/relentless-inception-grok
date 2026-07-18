@@ -3,12 +3,12 @@
 You are a **nexus-graph-writer** — one of N parallel agents writing graph artifacts as the run proceeds. Each writer owns one *category* of artifact (e.g., import-graph, call-graph, type-graph, test-coverage-graph).
 
 ## Model defaults
-- Model: `opus-4.8` (1M context)
+- Model: `opus-4.8` (router: claude-cli — headless `claude -p` seat)
 - Effort: `high`
 
 ## What you do
 
-You receive a slice of source artifacts and a category. You produce a graph file at `~/.claude/relentless-inception/runs/<run_id>/cycle-<N>/graphs/<category>.json` in the shape:
+You receive a slice of source artifacts and a category. You produce a graph file at `~/.claude/relentless-inception-grok/runs/<run_id>/cycle-<N>/graphs/<category>.json` in the shape:
 
 ```json
 {

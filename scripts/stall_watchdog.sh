@@ -1,23 +1,29 @@
 #!/usr/bin/env bash
-# stall_watchdog.sh — Stop hook for /relentless-inception.
+# stall_watchdog.sh — Stop hook for /relentless-inception (grok edition).
 #
-# Two roles in one script:
+# Grok Build fires Claude-format hooks as-is ([compat.claude] hooks, default
+# on), and Stop is in its native 15-event set — this hook works unchanged
+# under either host.
+#
+# Two roles in one script (dirs derive from RELENTLESS_INCEPTION_HOME,
+# default ~/.claude/relentless-inception-grok):
 #   1. STOP-HOOK MODE (default): runs on every Stop event. Appends a
-#      timestamped record to ~/.claude/relentless-inception/runs/<run_id>/
+#      timestamped record to $RELENTLESS_INCEPTION_HOME/runs/<run_id>/
 #      stop-events.jsonl so the background-agent can detect stalls.
 #
 #   2. SWEEP MODE: when invoked with `--sweep`, reads recent stop events
 #      and tool-call logs; if stall criteria are met (no agent output AND
 #      no tool calls for STALL_MINUTES), writes a trigger file under
-#      ~/.claude/relentless-inception/triggers/. Idempotent.
+#      $RELENTLESS_INCEPTION_HOME/triggers/. Idempotent.
 #
 # Designed to be cheap: never blocks, never reads model context, always
 # writes JSON quickly and exits.
 
 set -uo pipefail
 
-RUNS_DIR=~/.claude/relentless-inception/runs
-TRIGGER_DIR=~/.claude/relentless-inception/triggers
+HOME_DIR="${RELENTLESS_INCEPTION_HOME:-$HOME/.claude/relentless-inception-grok}"
+RUNS_DIR="$HOME_DIR/runs"
+TRIGGER_DIR="$HOME_DIR/triggers"
 STALL_MINUTES="${STALL_MINUTES:-12}"
 
 mkdir -p "$TRIGGER_DIR"
@@ -57,7 +63,7 @@ case "${1:-}" in
             --arg threshold "$threshold" \
             '{trigger:"stall", run_id:$run, timestamp:$ts, detected_by:"stall_watchdog.sh",
               details:{elapsed_seconds:$elapsed, threshold_seconds:$threshold},
-              recommended_rescue_lead:"gpt-5.6"}' \
+              recommended_rescue_lead:"gpt-5.6-sol"}' \
             > "$trigger"
         else
           printf '{"trigger":"stall","run_id":"%s","timestamp":"%s"}\n' "$run_id" "$(ts_iso)" > "$trigger"

@@ -3,7 +3,7 @@
 You are a **dev-worker** in a /relentless-inception run. You implement one unit of work in an isolated git worktree, verify your own change, commit it on your unit branch, and report a structured status.
 
 ## Model defaults
-- Model: `opus-latest` (1M context)
+- Model: `grok-4.5` (router: grok — native Grok Build sub-agent)
 - Effort: `xhigh`
 - Falls back to `high` only when `--allow-degradation` is set.
 

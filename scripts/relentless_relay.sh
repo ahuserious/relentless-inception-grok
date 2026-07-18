@@ -1,9 +1,23 @@
 #!/usr/bin/env bash
-# relentless_relay.sh — UserPromptSubmit hook for /relentless-inception.
+# relentless_relay.sh — UserPromptSubmit hook for /relentless-inception (grok edition).
 #
 # Rebuilt from inception-clear-relay.sh.original (archived 2026-05-19) with
 # the GIGAPROMPT sentinel replaced by RELENTLESS-* and the model + effort
 # defaults updated for the consolidated skill.
+#
+# GROK EDITION CAVEATS (honest limitations):
+#   * Grok Build honors Claude-format hooks from ~/.claude/settings.json
+#     as-is ([compat.claude] hooks, on by default), and UserPromptSubmit is
+#     in its native event set. BUT its documented hook stdin carries
+#     hookEventName/sessionId/cwd/workspaceRoot — a `prompt` field for
+#     UserPromptSubmit is NOT documented, and {"decision":"block"} output is
+#     documented for PreToolUse only. Both are verified on Claude Code and
+#     UNKNOWN on Grok Build.
+#   * The tmux keystroke relay below was built against Claude Code's TUI.
+#     Grok Build's TUI has /model and accepts pasted input, but driving it
+#     with tmux send-keys is UNVERIFIED — so the auto-fire path is gated
+#     behind RELAY_EXPERIMENTAL=1. Without it, the relay stages the payload
+#     and prints the manual-recovery banner instead.
 #
 # Two sentinels are recognized as the FIRST LINE of the user prompt:
 #
@@ -19,8 +33,9 @@
 #                          consortium to know.
 #
 # Both follow the same tmux-driven /clear + paste flow. Behavior:
-#   1. Save the body to ~/.claude/lateral-pass/pending-relentless.md
-#      (or pending-relentless-rescue.md for the manual variant).
+#   1. Save the body to $RELENTLESS_INCEPTION_HOME/lateral-pass/
+#      pending-relentless.md (or pending-relentless-rescue.md for the
+#      manual variant).
 #   2. Block the current prompt with a status message.
 #   3. Spawn a detached daemon into the same tmux pane that runs:
 #        sleep 1   → tmux send-keys "/clear" Enter
@@ -36,15 +51,19 @@
 
 set -euo pipefail
 
-INBOX_AUTO=~/.claude/lateral-pass/pending-relentless.md
-INBOX_MANUAL=~/.claude/lateral-pass/pending-relentless-rescue.md
-ARCHIVE=~/.claude/lateral-pass/archive
-LOG=~/.claude/lateral-pass/relay.log
+# All state derives from RELENTLESS_INCEPTION_HOME (default
+# ~/.claude/relentless-inception-grok), including lateral-pass/.
+HOME_DIR="${RELENTLESS_INCEPTION_HOME:-$HOME/.claude/relentless-inception-grok}"
+LATERAL="$HOME_DIR/lateral-pass"
+INBOX_AUTO="$LATERAL/pending-relentless.md"
+INBOX_MANUAL="$LATERAL/pending-relentless-rescue.md"
+ARCHIVE="$LATERAL/archive"
+LOG="$LATERAL/relay.log"
 
 # Force these on every auto-relay. Override via env (e.g. RELENTLESS_MODEL=
-# claude-sonnet-4-6) before starting the tmux pane; the default is the
-# max-reasoning Opus 1M variant the skill pins to.
-FORCE_MODEL="${RELENTLESS_MODEL:-claude-opus-4-8[1m]}"
+# grok-4.3) before starting the tmux pane; the default is the verified
+# default panel-expert slug (roster: grok-4.5, grok-4.3, grok-4.20 family).
+FORCE_MODEL="${RELENTLESS_MODEL:-grok-4.5}"
 
 mkdir -p "$(dirname "$INBOX_AUTO")" "$ARCHIVE"
 
@@ -66,8 +85,10 @@ if [[ "$first_line" == "# RELENTLESS-INBOX" ]]; then
   printf '%s' "$prompt" > "$INBOX_AUTO"
   log "RELENTLESS-INBOX captured ($(wc -c < "$INBOX_AUTO") bytes)"
 
+  # tmux auto-fire is EXPERIMENTAL on Grok Build (keystroke relay unverified
+  # against its TUI) — opt in with RELAY_EXPERIMENTAL=1.
   SESSION=""
-  if [[ -n "${TMUX:-}" ]] && command -v tmux >/dev/null 2>&1; then
+  if [[ "${RELAY_EXPERIMENTAL:-0}" == "1" && -n "${TMUX:-}" ]] && command -v tmux >/dev/null 2>&1; then
     SESSION=$(tmux display-message -p '#S' 2>/dev/null || echo "")
   fi
 
@@ -98,11 +119,16 @@ if [[ "$first_line" == "# RELENTLESS-INBOX" ]]; then
     exit 0
   fi
 
-  # No tmux → manual fallback banner.
+  # No auto-fire (no tmux, or the experimental relay is off) → manual banner.
+  if [[ "${RELAY_EXPERIMENTAL:-0}" == "1" ]]; then
+    gate_note="tmux NOT detected — autonomous rehydrate can only fire inside tmux."
+  else
+    gate_note="RELAY_EXPERIMENTAL is not 1 — the tmux keystroke relay is unverified against Grok Build's TUI and stays opt-in."
+  fi
   bytes=$(wc -c < "$INBOX_AUTO")
   manual_reason="Relentless rescue staged at $INBOX_AUTO ($bytes bytes).
 
-tmux NOT detected — autonomous rehydrate can only fire inside tmux.
+$gate_note
 To resume the run, do ONE of:
 
   A. Keep this terminal interactive:
@@ -110,13 +136,13 @@ To resume the run, do ONE of:
      2. /model $FORCE_MODEL
      3. Type any char + Enter to inject the staged prompt.
 
-  B. Restart under tmux (recommended for unattended runs):
+  B. Restart under tmux (unattended runs; requires RELAY_EXPERIMENTAL=1):
      1. Ctrl-C to exit.
      2. tmux new-session -s relentless
-     3. claude --dangerously-skip-permissions --model $FORCE_MODEL --effort max
+     3. RELAY_EXPERIMENTAL=1 grok --always-approve -m $FORCE_MODEL --effort max
      4. Paste the staged prompt body — the auto-relay daemon will take over.
 
-Effort must be max: CLI flag --effort max overrides settings default."
+Effort must be max: CLI flag --effort max overrides the config default."
   if command -v jq >/dev/null 2>&1; then
     jq -nc --arg reason "$manual_reason" '{decision:"block", reason:$reason}'
   else
@@ -132,14 +158,14 @@ if [[ "$first_line" == "# RELENTLESS-RESCUE" ]]; then
   log "RELENTLESS-RESCUE captured ($(wc -c < "$INBOX_MANUAL") bytes)"
 
   # Write a trigger file so the background-agent picks it up next sweep.
-  TRIGGER_DIR=~/.claude/relentless-inception/triggers
+  TRIGGER_DIR="$HOME_DIR/triggers"
   mkdir -p "$TRIGGER_DIR"
   TRIGGER_FILE="$TRIGGER_DIR/rescue-manual-$(ts).json"
   if command -v jq >/dev/null 2>&1; then
     jq -nc \
       --arg ts "$(ts)" \
       --arg body "$prompt" \
-      '{trigger:"manual",timestamp:$ts,detected_by:"relentless_relay.sh",details:{body:$body},recommended_rescue_lead:"gpt-5.6"}' \
+      '{trigger:"manual",timestamp:$ts,detected_by:"relentless_relay.sh",details:{body:$body},recommended_rescue_lead:"gpt-5.6-sol"}' \
       > "$TRIGGER_FILE"
   else
     printf '{"trigger":"manual","timestamp":"%s","detected_by":"relentless_relay.sh"}\n' "$(ts)" > "$TRIGGER_FILE"
@@ -161,6 +187,9 @@ if [[ -f "$INBOX_AUTO" ]]; then
   ARCHIVED="$ARCHIVE/relentless-injected-$(ts).md"
   mv "$INBOX_AUTO" "$ARCHIVED"
   if command -v jq >/dev/null 2>&1; then
+    # hookSpecificOutput/additionalContext is Claude Code's UserPromptSubmit
+    # contract; whether Grok Build honors it is UNDOCUMENTED. Harmless if
+    # ignored — the payload is already archived for manual paste.
     jq -nc --arg ctx "$content" \
       '{hookSpecificOutput:{hookEventName:"UserPromptSubmit", additionalContext:$ctx}}'
   fi

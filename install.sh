@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
 #
-# relentless-inception — one-shot installer (flat-clone path).
+# relentless-inception-grok — one-shot installer (flat-clone path, Grok Build edition).
 #
-# This installs the skill directory into ~/.claude/skills and scaffolds the
+# This installs the skill directory into ~/.grok/skills and scaffolds the
 # user config. It is idempotent: existing config is never overwritten.
 #
-# Prefer the plugin path if you want /plugin-managed updates:
-#     /plugin marketplace add ahuserious/relentless-inception
-#     /plugin install relentless-inception@ahuserious
+# Grok Build also scans ~/.claude/skills/ zero-config, so
+#     RI_SKILL_DIR="$HOME/.claude/skills/relentless-inception-grok"
+# is a valid alternate target — but prefer the default: within Grok's user tier
+# ~/.grok/skills/ outranks ~/.claude/skills/, and Claude Code never scans ~/.grok/,
+# so both editions coexist cleanly.
+#
+# Prefer the plugin path if you want managed updates:
+#     grok plugin install ahuserious/relentless-inception-grok --trust
 #
 # Overridable env vars: RI_SKILL_DIR, RI_CONFIG_DIR, RI_REPO
 set -euo pipefail
 
-SKILL_DIR="${RI_SKILL_DIR:-$HOME/.claude/skills/relentless-inception}"
-CONFIG_DIR="${RI_CONFIG_DIR:-$HOME/.claude/relentless-inception}"
-REPO="${RI_REPO:-https://github.com/ahuserious/relentless-inception}"
+SKILL_DIR="${RI_SKILL_DIR:-$HOME/.grok/skills/relentless-inception-grok}"
+CONFIG_DIR="${RI_CONFIG_DIR:-$HOME/.claude/relentless-inception-grok}"
+REPO="${RI_REPO:-https://github.com/ahuserious/relentless-inception-grok}"
 
 echo "==> Installing skill -> $SKILL_DIR"
 if [ -d "$SKILL_DIR/.git" ]; then
@@ -36,7 +41,7 @@ fi
 if [ ! -f "$CONFIG_DIR/secrets.env" ]; then
   cp "$SKILL_DIR/assets/secrets.env.example" "$CONFIG_DIR/secrets.env"
   chmod 600 "$CONFIG_DIR/secrets.env"
-  echo "    wrote secrets.env (chmod 600) — only needed for the openrouter backend"
+  echo "    wrote secrets.env (chmod 600) — only needed for the provider-direct transports"
 else
   echo "    secrets.env exists; kept"
 fi
@@ -49,16 +54,17 @@ fi
 cat <<'EOF'
 
 Done. To finish setup:
-  1. Set your Claude Code session so the fuser seat is Fable 5 at xhigh:
-         /model fable
-         /effort xhigh
-     (The fuser = whatever model your session is on; the screenshots ship it as fable-xhigh.)
-  2. Pick at least one deliberation backend:
-       - codex panel (default, ChatGPT subscription, no API key):
-             /plugin marketplace add openai/codex-plugin-cc
-             /plugin install codex@openai-codex
-       - openrouter (optional): put OPENROUTER_API_KEY in ~/.claude/relentless-inception/secrets.env
-       - neither: gates fall to the sanctioned claude-panel floor (still runs)
+  1. Make sure Grok Build is signed in:
+         grok login          (SuperGrok or X Premium+; headless box: grok login --device-auth)
+  2. Wire up seats for the default three-vendor panel (each optional; missing seats
+     degrade per the recorded ladder, and with none the gates still run on the native
+     grok-panel floor):
+       - xai direct (panel expert, grok-4.5 @xhigh): put XAI_API_KEY in
+             ~/.claude/relentless-inception-grok/secrets.env
+       - codex (gpt-5.6-sol seat, ChatGPT subscription): npm i -g @openai/codex && codex login
+       - claude-cli (fable-5 panel/judge/fuser seats, Claude subscription): install the
+         `claude` CLI and sign in. Without it, the fuser falls back to `grok-session` —
+         then run your session on your strongest Grok model (grok -m grok-4.5 --effort xhigh).
   3. Invoke from any chat:
          /relentless-inception <your multi-day build task>
 

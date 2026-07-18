@@ -1,28 +1,31 @@
 {
   "$doc": [
-    "Fusion deliberation config for relentless-inception gates (v0.2.1).",
-    "USER COPY lives at ~/.claude/relentless-inception/fusion.config.json — edit THAT, not this shipped default (skill upgrades overwrite this file).",
-    "Secrets (OPENROUTER_API_KEY) go in ~/.claude/relentless-inception/secrets.env — see assets/secrets.env.example. Never put keys in this file.",
-    "transports: 'claude' = subagent inside Claude Code (no key needed) · 'codex' = codex CLI / codex@openai-codex plugin (ChatGPT subscription auth) · 'openrouter' = direct OpenRouter HTTP (needs OPENROUTER_API_KEY).",
-    "backends.codex_plugin / backends.openrouter turn the non-claude transports on or off; both may be enabled at once and seats mix freely.",
-    "Panel design guidance (TrustedRouter DRACO artifact): the FUSER is the lever (~18-pt swing) — keep it the strongest model; the judge barely matters (cheap is fine, default honors user preference of fable-5); diversity comes from distinct models/personas, NOT temperature."
+    "Fusion deliberation config for relentless-inception gates (Grok Build edition, v0.3.0-grok).",
+    "USER COPY lives at ~/.claude/relentless-inception-grok/fusion.config.json — edit THAT, not this shipped default (skill upgrades overwrite this file).",
+    "Secrets (provider API keys) go in ~/.claude/relentless-inception-grok/secrets.env — see assets/secrets.env.example. Never put keys in this file.",
+    "transports: 'grok' = native Grok Build sub-agent (host session, no key needed) · 'claude-cli' = headless `claude -p` (Claude subscription login, no key) · 'codex' = codex CLI (ChatGPT subscription auth, no key) · 'xai' / 'openai' / 'anthropic' / 'openrouter' = provider-direct HTTP, each enabled only when its key is in secrets.env (XAI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY).",
+    "backends.* turn each transport on or off; any subset may be enabled at once and seats mix freely.",
+    "Panel design guidance (TrustedRouter DRACO artifact): the FUSER is the lever (~18-pt swing) — keep it the strongest model; the judge barely matters (cheap is fine, default honors user preference of fable-5); diversity comes from distinct models/personas, NOT temperature.",
+    "xAI facts verified live 2026-07-18 against a real key: GET api.x.ai/v1/models -> 200 (slugs incl. grok-4.5, grok-4.3, grok-4.20-0309-reasoning, grok-4.20-0309-non-reasoning, grok-4.20-multi-agent-0309, grok-build-0.1); POST /v1/chat/completions is OpenAI-compatible; grok-4.5 ACCEPTS reasoning_effort 'xhigh' (reasoning_tokens reported, prompt caching active)."
   ],
-  "backends": { "codex_plugin": true, "openrouter": false },
+  "backends": { "grok_native": true, "claude_cli": true, "codex": true, "xai_direct": true, "openai_direct": false, "anthropic_direct": false, "openrouter": false },
   "panel": [
-    { "transport": "claude", "model": "fable-5", "count": 1, "effort": "xhigh" },
+    { "transport": "xai", "model": "grok-4.5", "count": 1, "effort": "xhigh" },
     { "transport": "codex", "model": "sol", "count": 1, "effort": "xhigh" },
-    { "transport": "claude", "model": "opus-4.8", "count": 1, "effort": "xhigh" }
+    { "transport": "claude-cli", "model": "fable-5", "count": 1, "effort": "xhigh" }
   ],
   "$panel_notes": [
-    "Default = 1 fable-5 + 1 gpt-5.6-sol (xhigh) + 1 opus-4.8 (xhigh); raise any count to 2 for heavier gates.",
+    "Default = 1 grok-4.5 (the panel expert seat, verified live) + 1 gpt-5.6-sol (xhigh) + 1 fable-5 (xhigh) — three vendors; raise any count to 2 for heavier gates.",
     "luna/terra are deliberately NOT in the default panel (weaker than sol) but remain valid codex models if listed here.",
-    "codex model aliases the skill resolves: sol→gpt-5.6-sol, luna→gpt-5.6-luna, terra→gpt-5.6-terra; any catalog slug also accepted, ANY effort minimal..xhigh (ultra = raw CLI only)."
+    "codex model aliases the skill resolves: sol→gpt-5.6-sol, luna→gpt-5.6-luna, terra→gpt-5.6-terra; any catalog slug also accepted, ANY effort minimal..xhigh (ultra = raw CLI only).",
+    "xai seats: grok-4.5 is the default panel-expert slug; the other verified slugs above are valid config values."
   ],
-  "judge": { "transport": "claude", "model": "fable-5", "effort": "low" },
-  "fuser": { "transport": "claude-code-session", "effort": "xhigh" },
-  "$fuser_note": "claude-code-session = whatever model is selected in Claude Code right now runs the fuser as a fresh instance (must differ from the judge instance and from the reviewed artifact's author).",
+  "judge": { "transport": "claude-cli", "model": "fable-5", "effort": "low" },
+  "$judge_note": "The judge barely matters — cheap is fine. If the claude CLI is absent, fall back to a cheap grok seat (transport 'grok', low effort); judge provenance is recorded in the verdict _meta.",
+  "fuser": { "transport": "claude-cli", "model": "fable-5", "effort": "xhigh", "fallback": "grok-session" },
+  "$fuser_note": "The fuser is the lever (~18-pt swing) — default is fable-5 @xhigh via headless claude CLI, the strongest available seat. Sanctioned fallback 'grok-session' = the Grok Build session model runs the fuser as a fresh instance when the claude CLI is absent (must differ from the judge instance and from the reviewed artifact's author). Fuser provenance is always recorded in the verdict _meta.",
   "openrouter_direct": {
-    "$doc": "Applies ONLY when a seat (or the whole gate via the openrouter/fusion plugin) calls OpenRouter directly. OpenRouter fusion semantics: plugin temperature reaches the PANEL only; the judge is pinned to temp 0; plugin reasoning reaches panel+judge.",
+    "$doc": "Legacy key name — applies to ANY seat on a provider-direct HTTP transport (xai/openai/anthropic/openrouter), and only to non-reasoning calls: reasoning-mode calls manage sampling internally. Subscription transports (grok/claude-cli/codex) never take a temperature. OpenRouter fusion semantics: plugin temperature reaches the PANEL only; the judge is pinned to temp 0; plugin reasoning reaches panel+judge.",
     "temperature": { "panel": 1.0, "judge": 0.0 },
     "temp_warnings": [
       "Reasoning models generally do NOT take kindly to temperature overrides — leave temp unset/1.0 for: OpenAI o-series and gpt-5.x in reasoning mode (temperature is ignored or rejected with a 400), Anthropic Claude with extended thinking (requires temperature=1; setting anything else errors), DeepSeek-R1-class and Gemini thinking modes (sampling is managed internally).",

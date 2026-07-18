@@ -36,7 +36,7 @@ What it does:
   - `dagger -m ./dagger call test` for containerized tests when the project has a Dagger module
   - The simulated-user harness designed by `test-harness-designer`
 - Outputs flow into `assets/tearsheet_template.html` to produce a tearsheet for the cycle.
-- If the projected outputs don't match actuals, the orchestrator does NOT trust the dev-worker's self-report. It triggers adversarial-review with 5× gpt-5.6-sol + opus-latest xhigh as a consciousness consortium on the *plan* phase (was the plan wrong?), plus gemini-latest xhigh + parallel exa-web + knowledge-base agents on the *review* phase (what did we miss?).
+- If the projected outputs don't match actuals, the orchestrator does NOT trust the dev-worker's self-report. It triggers adversarial-review with 5× gpt-5.6-sol + opus-4.8 xhigh as a consciousness consortium on the *plan* phase (was the plan wrong?), plus a Gemini seat routed via the `openrouter` transport (needs `OPENROUTER_API_KEY`) + parallel exa-web + knowledge-base agents on the *review* phase (what did we miss?).
 - The `/loop` gate re-evaluates: function works, or rerun the phase. Max 3 reruns per phase before escalating to rescue.
 
 When to pick: most multi-day work. This is the right default for "ship a feature with proof" or "land a refactor that touches a lot."
@@ -72,7 +72,7 @@ What it does:
 - **3× adversarial loops** on the orchestrator's own decisions.
 - **Consciousness council** at every gate: a quorum of independent models from different providers must agree.
 - **Miro-fish swarm using OCR agents** for diagrams, figures, screen recordings — the harness can ingest visual artifacts and reason about them.
-- Honors the soft / hard budget caps. When `--budget-soft-hours` is hit, the run pauses for user review. When the kill switch (`~/.claude/relentless-inception/KILL`) is set, the run stops within 60 seconds.
+- Honors the soft / hard budget caps. When `--budget-soft-hours` is hit, the run pauses for user review. When the kill switch (`~/.claude/relentless-inception-grok/KILL`) is set, the run stops within 60 seconds.
 
 When to pick: never casually. The right contexts are research breakthroughs, intractable bugs that have survived multiple `skynet` runs, or projects where the user has explicitly allocated a large budget for "make this as good as it can be."
 

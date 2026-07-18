@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Orchestrator entrypoint for /relentless-inception.
 
-This is a *scaffold*. The real agent dispatch happens inside Claude Code
-when the skill is invoked: the LLM reads SKILL.md + the relevant
-references/ + agents/ files and spawns subagents via the Agent tool.
+This is a *scaffold*. The real agent dispatch happens inside the Grok
+Build session when the skill is invoked: the LLM reads SKILL.md + the
+relevant references/ + agents/ files and spawns subagents via its agent
+tooling.
 
 What this script does:
   - Parse CLI flags (matches references/settings-and-flags.md)
@@ -13,7 +14,7 @@ What this script does:
   - Refuse to start if main/master is the current branch
   - Watch for the kill switch and trigger files (rescue path)
   - Print the resolved plan + entry banner; then exit, leaving the
-    Claude-Code-side orchestrator (the LLM reading this skill) in charge.
+    host-session orchestrator (the LLM reading this skill) in charge.
 
 When the skill's runtime layer matures (Slice C+), this script gains real
 dispatch logic that imports `orchestrator.RunManifest` from the
@@ -43,7 +44,14 @@ from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 HOME = Path.home()
-STATE_DIR = HOME / ".claude" / "relentless-inception"
+# All state lives under ~/.claude/relentless-inception-grok/ by default;
+# RELENTLESS_INCEPTION_HOME overrides it (run/trigger dirs derive from it).
+STATE_DIR = Path(
+    os.environ.get(
+        "RELENTLESS_INCEPTION_HOME",
+        str(HOME / ".claude" / "relentless-inception-grok"),
+    )
+)
 KILL_SWITCH = STATE_DIR / "KILL"
 TRIGGERS_DIR = STATE_DIR / "triggers"
 RUNS_DIR = STATE_DIR / "runs"
@@ -187,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
 │ run dir          : {run_dir}
 ╰──────────────────────────────────────────────────────────────╯
 
-The Claude Code orchestrator (the LLM reading this skill) now takes over:
+The Grok Build orchestrator (the LLM reading this skill) now takes over:
   1. read SKILL.md + the planning-mode reference for {args.plan}
   2. spawn planner + architecture-analyzer (see agents/planner.md, agents/architecture-analyzer.md)
   3. run the plan gate via scripts/adversarial_review.sh

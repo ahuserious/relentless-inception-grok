@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """tearsheet.py — generate the HTML proof tearsheet for a run cycle.
 
-Inputs:
-  - run manifest (~/.claude/relentless-inception/runs/<run_id>/manifest.json)
-  - cycle directory (~/.claude/relentless-inception/runs/<run_id>/cycle-<N>/)
+Inputs (paths under $RELENTLESS_INCEPTION_HOME, default
+~/.claude/relentless-inception-grok):
+  - run manifest (~/.claude/relentless-inception-grok/runs/<run_id>/manifest.json)
+  - cycle directory (~/.claude/relentless-inception-grok/runs/<run_id>/cycle-<N>/)
     containing:
       - personas/*.json     (sim-user reports)
       - reasoning-traces/   (per-agent stream snapshots, optional)

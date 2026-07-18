@@ -1,14 +1,14 @@
 {
-  "name": "ahuserious",
+  "name": "ahuserious-grok",
   "owner": { "name": "ahuserious" },
-  "description": "ahuserious Claude Code plugins.",
+  "description": "ahuserious plugins — Grok Build editions.",
   "plugins": [
     {
-      "name": "relentless-inception",
+      "name": "relentless-inception-grok",
       "source": ".",
-      "description": "Autonomous multi-day orchestrator with multi-model fusion-deliberation gates (panel -> judge -> fuser), rescue mode, and HTML proof tearsheets.",
+      "description": "Grok Build edition: autonomous multi-day orchestrator with multi-model fusion-deliberation gates (panel -> judge -> fuser), rescue mode, and HTML proof tearsheets.",
       "category": "workflow",
-      "keywords": ["orchestrator", "autonomous", "fusion", "deliberation", "multi-agent", "codex", "openrouter"]
+      "keywords": ["orchestrator", "autonomous", "fusion", "deliberation", "multi-agent", "grok", "grok-build", "codex", "claude", "xai"]
     }
   ]
 }
