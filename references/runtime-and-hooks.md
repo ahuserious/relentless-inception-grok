@@ -37,7 +37,7 @@ The settings fragment looks like:
 - **`UserPromptSubmit`** → `scripts/relentless_relay.sh`. Watches for `# RELENTLESS-INBOX`
   prompts; when seen, clears the active session and re-pastes the body. Foundation for
   rescue. (On Grok Build, rescue session takeover itself dispatches a **fresh** headless
-  session — `grok -p "$(cat inbox)" -s "$(uuidgen)"`, or the same over ACP `grok agent
+  session — `grok --prompt-file <inbox>` (a new invocation is a fresh session on 0.2.56; no `-s` flag), or the same over ACP `grok agent
   stdio` — not tmux keystrokes; `--resume`/`-r` is only for the *user* re-attaching to
   that new session afterwards. The claude-edition tmux relay script is retained only
   behind `RELAY_EXPERIMENTAL=1`. See `rescue-mode.md`.)

@@ -14,7 +14,7 @@ The skill expects the following tools and credentials. The entrypoint runs `scri
 | uv          | shipping, member install                                 | `curl -LsSf https://astral.sh/uv/install.sh \| sh`  |
 | dagger      | Una + Dagger shipping ladder                             | `curl -fsSL https://dl.dagger.io/dagger/install.sh \| sh` |
 | docker      | live containerized testing                               | Docker Desktop or compatible engine            |
-| tmux        | optional — legacy keystroke relay (`relentless_relay.sh`) only; Grok Build rescue prefers headless resume (`grok -p ... -r <id>`) / ACP (`grok agent stdio`), which need no tmux | `brew install tmux` |
+| tmux        | optional — legacy keystroke relay (`relentless_relay.sh`) only; Grok Build rescue prefers headless dispatch (`grok --prompt-file …`) / ACP (`grok agent stdio`), which need no tmux | `brew install tmux` |
 | jq          | ship-report parsing, gate JSON plumbing                  | `brew install jq`                              |
 | git         | obvious                                                  | usually preinstalled                           |
 

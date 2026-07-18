@@ -120,14 +120,14 @@ on keystroke injection.
    a genuinely new context window, new session id, no TUI automation:
 
    ```
-   grok -p "$(cat pending-relentless.md)" -s "$(uuidgen)" --output-format json
+   grok --prompt-file pending-relentless.md --output-format json
    ```
 
    (or drive the same over ACP with `grok agent stdio` when an IDE/harness is attached).
    Capture the returned `sessionId`; the run continues in that session and is watchable via
    `grok sessions list` / `grok dashboard`. `--resume`/`-r <id>` is only for the **user**
    re-attaching interactively to that new session — the takeover itself is always the
-   fresh `-s "$(uuidgen)"` dispatch above, never a resume of the stuck session.
+   fresh dispatch above (verified on grok 0.2.56: each new invocation is its own session; there is no `-s` flag), never a resume of the stuck session.
 3. Move the pending file to `archive/`.
 
 The result is identical in spirit to the claude edition: a fresh-context orchestrator whose

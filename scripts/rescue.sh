@@ -168,30 +168,31 @@ log "wrote inputs.md ($(wc -c < "$cycle_dir/inputs.md") bytes)"
 log "RELENTLESS-INBOX prompt written to $INBOX ($(wc -c < "$INBOX") bytes)"
 
 # Takeover = FRESH session. Feature-detect the grok CLI: if present, dispatch
-# the prompt headlessly into a brand-new session (-s gives it a knowable id).
-# --resume/-r is ONLY for the USER re-attaching to that new session later —
-# never for the takeover itself. Without the CLI, fall back to staging +
-# manual banner (the relentless_relay.sh flow picks the staged file up).
+# the prompt headlessly — on grok 0.2.56 (verified) every new invocation IS a
+# fresh session (there is no -s/session-id flag); the prompt goes via
+# --prompt-file (never argv: ARG_MAX + ps-visibility). --resume/-r is ONLY for
+# the USER re-attaching to the newest session later — never for the takeover
+# itself. Without the CLI, fall back to staging + manual banner (the
+# relentless_relay.sh flow picks the staged file up).
 if command -v grok >/dev/null 2>&1; then
-  session_id="$(uuidgen)"
-  inbox_body="$(cat "$INBOX")"
   # Archive the staged file so the relay's manual-inject path can't re-fire
-  # the same rescue into a later interactive prompt.
+  # the same rescue into a later interactive prompt; dispatch FROM the archive.
   mkdir -p "$LATERAL/archive"
-  mv "$INBOX" "$LATERAL/archive/relentless-dispatched-$(date -u +%Y%m%dT%H%M%SZ).md"
-  log "grok CLI detected — dispatching fresh headless session $session_id"
-  ( grok -p "$inbox_body" -s "$session_id" \
+  dispatched="$LATERAL/archive/relentless-dispatched-$(date -u +%Y%m%dT%H%M%SZ).md"
+  mv "$INBOX" "$dispatched"
+  log "grok CLI detected — dispatching fresh headless session (--prompt-file)"
+  ( grok --prompt-file "$dispatched" --output-format json \
       > "$cycle_dir/grok-session.log" 2>&1 </dev/null & )
   echo
   echo "==================================================="
   echo "Rescue cycle $next_cycle dispatched for run $run_id."
   echo "Trigger:  $trigger"
   echo "Inputs:   $cycle_dir/inputs.md"
-  echo "Session:  $session_id (fresh headless Grok session)"
+  echo "Session:  fresh headless Grok session — id in $cycle_dir/grok-session.log; re-attach with: grok -r"
   echo "Log:      $cycle_dir/grok-session.log"
   echo
   echo "To re-attach to the rescue session yourself (optional):"
-  echo "  grok --resume $session_id    # or: grok -r $session_id"
+  echo "  grok -r          # re-attaches to the newest session (id in grok-session.log)"
   echo "(--resume/-r is for YOU re-attaching — the rescue itself is"
   echo " already running in the fresh session above.)"
   echo "==================================================="

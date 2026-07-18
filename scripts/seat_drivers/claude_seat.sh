@@ -99,7 +99,10 @@ if ! bounded "$CLAUDE_BIN" -p \
   exit 4
 fi
 
-# --output-format json envelope: review text in .result, spend in .total_cost_usd.
+# --output-format json emits either a single envelope object or (>=2.1.x) an event
+# ARRAY whose FINAL element is the envelope (verified on 2.1.214) — normalize first.
+jq 'if type=="array" then .[-1] else . end' "$RESP" > "$RESP.norm" && mv "$RESP.norm" "$RESP"
+# envelope: review text in .result, spend in .total_cost_usd.
 if ! jq -e '.result | type == "string" and length > 0' "$RESP" >/dev/null 2>&1; then
   ledger "$ROLE" "claude-cli:$CLI_MODEL" 0 "non-JSON or empty result"
   echo "claude seat returned non-JSON or empty result" >&2

@@ -88,7 +88,7 @@ for `STALL_MINUTES`, default 12), a dead spawned subprocess, or a hook misfiring
 in a row. It reads the full session log, spawns a fresh-context 2-model consortium
 (lead gpt-5.6-sol via `codex` + co-pilot opus-4.8 via `claude-cli`, both xhigh),
 triple-gates their fix, then restarts from the last checkpoint by dispatching a **fresh**
-headless session (`grok -p "$(cat inbox)" -s "$(uuidgen)"` — `--resume`/`-r` is only for
+headless session (`grok --prompt-file <inbox>` — on 0.2.56 every new invocation IS a fresh session (no `-s` flag exists); `--resume`/`-r` is only for
 the user re-attaching to that new session afterwards; the legacy tmux keystroke relay
 targeted Claude Code's TUI and is kept only behind `RELAY_EXPERIMENTAL=1`). Each cycle
 also runs a self-improvement pass.

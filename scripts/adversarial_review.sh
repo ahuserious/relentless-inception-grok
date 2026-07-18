@@ -123,8 +123,10 @@ fi
 
 # Structural validation: every verdict must at least carry these keys.
 valid_verdict() {
-  jq -e 'has("verdict") and (.verdict|type=="string")
-         and (["pass","fail","revise"] | index(.verdict) != null)' "$1" >/dev/null 2>&1
+  # NB: .verdict must be captured BEFORE piping into the enum array — inside
+  # 'ARRAY | index(.verdict)' jq rebinds '.' to the array (scoping bug we shipped once).
+  jq -e '(type=="object") and (.verdict? | type=="string")
+         and (.verdict as $v | ["pass","fail","revise"] | index($v) != null)' "$1" >/dev/null 2>&1
 }
 
 fail_verdict() { # fail_verdict <out> <backend> <reason>
