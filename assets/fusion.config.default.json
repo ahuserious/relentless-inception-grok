@@ -1,0 +1,34 @@
+{
+  "$doc": [
+    "Fusion deliberation config for relentless-inception gates (v0.2.1).",
+    "USER COPY lives at ~/.claude/relentless-inception/fusion.config.json — edit THAT, not this shipped default (skill upgrades overwrite this file).",
+    "Secrets (OPENROUTER_API_KEY) go in ~/.claude/relentless-inception/secrets.env — see assets/secrets.env.example. Never put keys in this file.",
+    "transports: 'claude' = subagent inside Claude Code (no key needed) · 'codex' = codex CLI / codex@openai-codex plugin (ChatGPT subscription auth) · 'openrouter' = direct OpenRouter HTTP (needs OPENROUTER_API_KEY).",
+    "backends.codex_plugin / backends.openrouter turn the non-claude transports on or off; both may be enabled at once and seats mix freely.",
+    "Panel design guidance (TrustedRouter DRACO artifact): the FUSER is the lever (~18-pt swing) — keep it the strongest model; the judge barely matters (cheap is fine, default honors user preference of fable-5); diversity comes from distinct models/personas, NOT temperature."
+  ],
+  "backends": { "codex_plugin": true, "openrouter": false },
+  "panel": [
+    { "transport": "claude", "model": "fable-5", "count": 1, "effort": "xhigh" },
+    { "transport": "codex", "model": "sol", "count": 1, "effort": "xhigh" },
+    { "transport": "claude", "model": "opus-4.8", "count": 1, "effort": "xhigh" }
+  ],
+  "$panel_notes": [
+    "Default = 1 fable-5 + 1 gpt-5.6-sol (xhigh) + 1 opus-4.8 (xhigh); raise any count to 2 for heavier gates.",
+    "luna/terra are deliberately NOT in the default panel (weaker than sol) but remain valid codex models if listed here.",
+    "codex model aliases the skill resolves: sol→gpt-5.6-sol, luna→gpt-5.6-luna, terra→gpt-5.6-terra; any catalog slug also accepted, ANY effort minimal..xhigh (ultra = raw CLI only)."
+  ],
+  "judge": { "transport": "claude", "model": "fable-5", "effort": "low" },
+  "fuser": { "transport": "claude-code-session", "effort": "xhigh" },
+  "$fuser_note": "claude-code-session = whatever model is selected in Claude Code right now runs the fuser as a fresh instance (must differ from the judge instance and from the reviewed artifact's author).",
+  "openrouter_direct": {
+    "$doc": "Applies ONLY when a seat (or the whole gate via the openrouter/fusion plugin) calls OpenRouter directly. OpenRouter fusion semantics: plugin temperature reaches the PANEL only; the judge is pinned to temp 0; plugin reasoning reaches panel+judge.",
+    "temperature": { "panel": 1.0, "judge": 0.0 },
+    "temp_warnings": [
+      "Reasoning models generally do NOT take kindly to temperature overrides — leave temp unset/1.0 for: OpenAI o-series and gpt-5.x in reasoning mode (temperature is ignored or rejected with a 400), Anthropic Claude with extended thinking (requires temperature=1; setting anything else errors), DeepSeek-R1-class and Gemini thinking modes (sampling is managed internally).",
+      "Do not use temperature as a diversity mechanism — empirically it does not decorrelate panel errors; vary models/personas/context bundles instead.",
+      "If you set panel temp above 1.2 expect degraded instruction-following on most models; below 0.3 panels converge and the fusion gain collapses."
+    ]
+  },
+  "iteration_caps": { "per_gate": 3, "panel_collapse_min_live_seats": 2 }
+}

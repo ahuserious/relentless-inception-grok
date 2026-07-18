@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "relentless-inception fused gate verdict (v0.2)",
+  "type": "object",
+  "required": ["verdict", "blocking_issues", "_meta"],
+  "properties": {
+    "verdict": { "enum": ["pass", "fail", "revise"] },
+    "blocking_issues": { "type": "array", "items": { "type": "string" } },
+    "required_changes": { "type": "array", "items": { "type": "string" } },
+    "preserved_minority_findings": { "type": "array", "items": { "type": "string" } },
+    "mechanical_verification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cmd", "exit_code"],
+        "properties": { "cmd": { "type": "string" }, "exit_code": { "type": "integer" } }
+      }
+    },
+    "dissent_reasons": { "type": "array", "items": { "type": "string" } },
+    "_meta": {
+      "type": "object",
+      "required": ["gate", "backend", "inputs_sha256", "timestamp"],
+      "properties": {
+        "gate": { "enum": ["plan", "phase", "summarize"] },
+        "backend": { "enum": ["openrouter-fusion", "openrouter", "codex", "claude-panel"] },
+        "ladder_position": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "degraded": { "type": "boolean" },
+        "diversity": { "type": "string" },
+        "panel": { "type": "array" },
+        "judge_model": { "type": "string" },
+        "fuser_model": { "type": "string" },
+        "inputs_sha256": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "iteration": { "type": "integer" },
+        "est_usd": { "type": "number" },
+        "amends": { "type": "string", "description": "inputs_sha256 of the failed verdict this amendment re-checks — required on any fail->pass flip, authored by an independent fuser-class reviewer, never the orchestrator" }
+      }
+    }
+  }
+}

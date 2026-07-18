@@ -1,0 +1,14 @@
+{
+  "name": "ahuserious",
+  "owner": { "name": "ahuserious" },
+  "description": "ahuserious Claude Code plugins.",
+  "plugins": [
+    {
+      "name": "relentless-inception",
+      "source": ".",
+      "description": "Autonomous multi-day orchestrator with multi-model fusion-deliberation gates (panel -> judge -> fuser), rescue mode, and HTML proof tearsheets.",
+      "category": "workflow",
+      "keywords": ["orchestrator", "autonomous", "fusion", "deliberation", "multi-agent", "codex", "openrouter"]
+    }
+  ]
+}
