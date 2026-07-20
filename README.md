@@ -2,7 +2,7 @@
 
 Relentless Inception is a runtime-backed Grok Build plugin for bounded multi-agent deliberation, generative fusion, exact-artifact adversarial review, and verified execution handoff. It combines the strongest parts of the original Relentless Inception workflow, Batch Create Eval, Gigaprompt, Exaflop, and evidence-first benchmark practice without relying on prompt compliance for budgets, provider dispatch, receipts, or release gates.
 
-Version `0.4.1` targets Grok Build `0.2.106` or newer.
+Version `0.4.1` was validated on Grok Build `0.2.106`. Newer Grok Build versions require compatibility retesting; package validation alone does not prove model catalog, agent namespace, effort, hook, or headless-launch compatibility.
 
 ## What is real
 
@@ -98,6 +98,16 @@ The runtime stores only credential environment-variable names such as:
 Never put plaintext keys in JSON, agent Markdown, hooks, repository files, or Grok's plugin manifest. The runtime can optionally read an explicitly configured owner-only (`0600`) static environment file; it never invokes a shell and never returns the values through configuration or doctor tools. Native Grok agents use the host's existing login. The plugin does not read or copy `~/.grok/auth.json`.
 
 OpenRouter is implemented and tested with mocks, but was not called in the local release campaign because no working OpenRouter credential was available. Direct xAI Grok 4.5 was exercised live.
+
+## Evidence and scope of claims
+
+The immutable [limited-cost fusion artifact](https://github.com/ahuserious/grok-fusion-artifact/tree/limited-cost-2026-07-20) publishes curated direct-xAI receipts, native Grok Build telemetry commitments, failed preflight attempts, opt-in jigs, SHA-256 manifests, and explicit claim boundaries.
+
+The completed direct run `grok-040-frontier-smoke-003` made seven calls, all requested and returned as exact `grok-4.5`; the two-reviewer exact-artifact gate passed 2/2; the ledger reports $0.1822328 and zero unknown-cost calls. The native profile needed two visible attempts: the first stopped cancelled after an incompatible one-turn/tool path ($0.1224548), while the corrected tool-less attempt ended with a structured `pass` ($0.1349708). Both requested `grok-4.5` at `high`; host telemetry reported `grok-4.5-build`.
+
+This was deliberately limited by API cost and is not a statistically powered benchmark. The external panel used several roles of one model family, so it is multi-agent deliberation rather than cross-model diversity. OpenRouter was not called live, and no Terminal-Bench or DeepSWE task was run with Grok Build as the host.
+
+See [release evidence](docs/RELEASE_EVIDENCE.md) for the exact matrix and [benchmark protocol](docs/BENCHMARK_PROTOCOL.md) for future physical harness acceptance.
 
 ## Verification
 

@@ -45,4 +45,6 @@ OpenRouter is not part of the local live acceptance campaign when no working cre
 
 Terminal-Bench and DeepSWE checks are expensive end-to-end integration tests. A task reward proves the implementation result; the Relentless Inception evidence validator separately proves that all required fusion and lifecycle calls completed with exact receipts. Report these outcomes separately when one passes and the other fails.
 
-The reduced local release campaign runs one problem from each harness per host. No retries or duplicate paid calls are hidden. Any harness timeout, missing lifecycle call, or deterministic gate block stays visible in the evidence record.
+The harness protocol targets one Terminal-Bench problem and one DeepSWE problem per host during a funded physical campaign. That target is not itself evidence. The 2026-07-20 Grok Build campaign did **not** run either host harness; its completed evidence is one direct-xAI fusion and one native-agent smoke after a visible cancelled attempt. See [release evidence](RELEASE_EVIDENCE.md).
+
+No retries, cancelled calls, missing lifecycle stages, timeouts, parser blocks, or deterministic gate failures may be hidden. A jig can be published while its result remains `not run`; only a retained physical receipt changes that status.

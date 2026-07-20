@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Published a separate checksummed limited-cost artifact with direct-xAI receipts, curated native Grok Build telemetry, failed preflight attempts, opt-in reproduction jigs, and explicit claim boundaries.
+- Added release-evidence and benchmark-protocol documentation that marks Terminal-Bench and DeepSWE as not run with Grok Build as host.
+- Added network-free GitHub CI and a manifest-version parity regression; aligned the compatibility manifest with runtime version 0.4.1.
+- Clarified that 0.4.1 was validated on Grok Build 0.2.106 and that newer hosts require compatibility retesting.
+
 ## 0.4.1 - 2026-07-20
 
 - Align every native agent, skill, command, host handoff, and recursive execution

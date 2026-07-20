@@ -34,7 +34,14 @@ class RuntimePackageIntegrityTests(unittest.TestCase):
     def test_release_identity_and_runtime_layout_are_consistent(self) -> None:
         default_config = load_config(include_user=False)
 
+        root_manifest = _load_json(PLUGIN_ROOT / "plugin.json")
+        compatibility_manifest = _load_json(
+            PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
+        )
+
         self.assertEqual(__version__, "0.4.1")
+        self.assertEqual(root_manifest["version"], __version__)
+        self.assertEqual(compatibility_manifest["version"], __version__)
         self.assertEqual(doctor(default_config)["version"], __version__)
         self.assertEqual(DEFAULT_CONFIG_PATH, PLUGIN_ROOT / "config" / "default.json")
         self.assertEqual(CONFIG_SCHEMA_PATH, PLUGIN_ROOT / "schemas" / "config.schema.json")
