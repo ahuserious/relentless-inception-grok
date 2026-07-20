@@ -1,0 +1,27 @@
+{
+  "description": "Passive lifecycle audit signals for defense in depth. These hooks are fail-open by Grok Build design; hard review gates are enforced by the MCP runtime.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${GROK_PLUGIN_ROOT}/hooks/lifecycle_audit.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${GROK_PLUGIN_ROOT}/hooks/lifecycle_audit.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

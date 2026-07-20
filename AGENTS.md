@@ -1,35 +1,20 @@
-# relentless-inception (Grok Build edition)
+# Relentless Inception for Grok Build
 
-This repository is a **skill for Grok Build** (xAI's `grok` CLI): a long-running
-autonomous orchestrator that plans, builds, adversarially reviews, ships, and rescues
-multi-day coding runs. Its signature mechanism is the **fusion deliberation gate** —
-every plan/phase/summarize checkpoint is reviewed by a multi-model panel (grok-4.5 +
-gpt-5.6-sol + fable-5 by default), then synthesized by a judge + fuser into a
-provenance-stamped verdict. Fail-closed; a sanctioned native grok-panel floor means the
-gate always runs.
+This repository is the runtime-backed Grok Build plugin. The canonical user workflow is `skills/relentless-inception/SKILL.md`; the hard provider, budget, receipt, and gate logic is under `runtime/`.
 
-## Where things live
+## Release invariants
 
-- **`SKILL.md`** (repo root) — the skill router. Read it first; it points to the
-  normative reference for every subsystem (`references/*.md`).
-- **`references/setup.md`** — full setup walkthrough: install, transports, config,
-  preflight. Start here to get running.
-- **`scripts/`** — gate driver, preflight, hooks, rescue, shipping ladders.
-- **`agents/`** — per-role prompt templates loaded per-spawn.
-- User config + secrets: `~/.claude/relentless-inception-grok/` (separate namespace from
-  the Claude Code edition, so both coexist).
+- Target Grok Build 0.2.106 or newer.
+- Native Grok agents use `grok-4.5-latest`; direct xAI API seats use exact `grok-4.5`.
+- Optional Codex participation uses exact `gpt-5.6-sol`.
+- Shipped defaults never select Grok 4.3, GPT-5.6 Terra, a cheaper judge, or an unconfigured router.
+- Other provider/model ids remain configurable through the schema; do not hard-code a global allowlist.
+- Secrets are environment references only. Never read or copy `~/.grok/auth.json`.
+- MCP gates are authoritative. Hooks are defense in depth and fail open on hook errors.
+- Preserve unrelated user changes and never force-push.
 
-## Entrypoint
+## Verification
 
-Invoke as **`/relentless-inception <multi-day build task>`** (the skill's frontmatter
-name is `relentless-inception`; this repo is the Grok Build edition of it, v0.3.0-grok).
+Before claiming completion, run the offline unit suite, compilation, JSON parsing, `grok plugin validate .`, an installed discovery check, and proportionate live provider/harness checks. A plugin manifest pass is not proof that model fusion works.
 
-Use it only for multi-hour/multi-day work whose "done" is a functional proof (real
-install, simulated-user run, HTML tearsheet) and that must survive its own failures
-unattended. Not for single-file edits, quick refactors, or work you want to babysit.
-
-## Safety rails (non-negotiable)
-
-Never runs on `main`/`master`; no force-push ever; budget caps per run/cycle; kill
-switch at `~/.claude/relentless-inception-grok/KILL`; `rm -rf` confined to the run's
-own namespace. Credentials are presence-checked only — never echoed.
+The legacy `assets/`, `references/`, and `scripts/` trees are provenance only. Do not route v0.4 work through the old shell scaffold or Claude settings installer.

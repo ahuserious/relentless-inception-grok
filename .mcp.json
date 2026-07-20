@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "relentless-inception": {
+      "command": "python3",
+      "args": [
+        "${GROK_PLUGIN_ROOT}/runtime/mcp_server.py"
+      ],
+      "env": {
+        "RELENTLESS_INCEPTION_DATA_DIR": "${GROK_PLUGIN_DATA}"
+      }
+    }
+  }
+}
