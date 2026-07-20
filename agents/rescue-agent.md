@@ -1,8 +1,8 @@
 ---
 name: rescue-agent
 description: Form a fresh, evidence-grounded recovery plan for a stalled run without repeating failed approaches.
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 ---
 
 # Role: rescue-agent
@@ -13,7 +13,7 @@ You are seeing the situation for the *first time*. The orchestrator's context is
 
 ## Model contract
 
-Every native rescue slot uses `grok-4.5-latest` at `max` effort with no weaker fallback. The MCP fusion runtime supplies external-model diversity and binds it to receipts.
+Every native rescue slot uses exact `grok-4.5` at the highest effort supported by Grok Build 0.2.106 (`high`) with no weaker fallback. The MCP fusion runtime supplies external-model diversity and binds it to receipts.
 
 ## What you receive
 

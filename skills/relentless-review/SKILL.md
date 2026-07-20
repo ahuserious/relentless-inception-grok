@@ -4,8 +4,8 @@ description: Run a strict independent adversarial gate over an exact artifact an
 when-to-use: relentless review, adversarial gate, review this plan, verify this implementation, final evidence gate, summary fidelity
 argument-hint: artifact or review task
 user-invocable: true
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 compatibility: Requires the relentless-inception MCP server and configured reviewer seats.
 metadata:
   author: ahuserious
@@ -23,4 +23,4 @@ Run review as an independent blocking gate, not as supportive commentary.
 5. On failure, apply only justified fixes, regenerate mechanical evidence, and submit the complete revised artifact as a new bounded review. Never relabel a failure as advisory.
 6. On pass, report what was reviewed, the bound artifact hash, the evidence used, dissent that remains non-blocking, and which lifecycle gate was satisfied.
 
-Native Grok reviewers use `grok-4.5-latest` at `max` effort. Active direct xAI reviewers use exact Grok 4.5; the shipped GPT-5.6 Sol seat is optional and disabled until its provider is explicitly configured. Never silently fall back to a weaker model. Passive lifecycle hooks are audit signals only and do not satisfy this gate.
+Native Grok reviewers use exact `grok-4.5` at the highest effort supported by Grok Build 0.2.106 (`high`). Active direct xAI reviewers use exact Grok 4.5; the shipped GPT-5.6 Sol seat is optional and disabled until its provider is explicitly configured. Never silently fall back to a weaker model. Passive lifecycle hooks are audit signals only and do not satisfy this gate.

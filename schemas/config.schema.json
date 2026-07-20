@@ -65,6 +65,11 @@
       "enum": ["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra", null],
       "description": "Requested reasoning intensity. Provider adapters map supported values and reject unsupported values rather than silently weakening a seat. Direct xAI Grok seats currently use low, medium, or high."
     },
+    "grokBuildReasoningEffort": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Grok Build 0.2.106 native-agent reasoning intensity. High is the strongest supported value; unsupported aliases such as xhigh, max, and ultra are rejected before launch."
+    },
     "providerCapabilities": {
       "type": "object",
       "additionalProperties": false,
@@ -604,7 +609,7 @@
           "description": "Preferred native Grok Build model for implementing an approved fused plan. Availability is resolved by the host, not the MCP server."
         },
         "executor_reasoning_effort": {
-          "$ref": "#/$defs/reasoningEffort"
+          "$ref": "#/$defs/grokBuildReasoningEffort"
         },
         "reviewer_models": {
           "type": "array",
@@ -625,7 +630,7 @@
           "description": "Named reviewer roles that must receive a complete immutable evidence packet and must never retrieve, call tools, execute, or mutate. The host enforces this boundary; the MCP server cannot change native Grok Build tools."
         },
         "reviewer_reasoning_effort": {
-          "$ref": "#/$defs/reasoningEffort"
+          "$ref": "#/$defs/grokBuildReasoningEffort"
         },
         "max_parallel_agents": {
           "type": "integer",
@@ -1222,7 +1227,7 @@
         "allow_recursive_grok_cli": {"type": "boolean", "description": "Opt in to the higher-risk recursive grok exec backend. The CLI still requires --confirm and refuses any packet with pending plan or pre-execution gates."},
         "grok_binary": {"type": "string", "minLength": 1, "description": "Grok Build executable used only by mode grok_cli. The value is frozen into the reviewed handoff so later profile changes cannot alter execution."},
         "model": {"type": "string", "minLength": 1, "description": "Grok Build execution model used only by mode grok_cli and persisted with the handoff."},
-        "reasoning_effort": {"type": "string", "enum": ["low", "medium", "high", "xhigh", "max", "ultra"], "description": "Grok Build execution reasoning effort used only by mode grok_cli and persisted with the handoff."},
+        "reasoning_effort": {"$ref": "#/$defs/grokBuildReasoningEffort"},
         "timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 86400, "description": "Maximum recursive Grok Build execution time in seconds. This does not change provider or lifecycle-gate deadlines."},
         "remote_models_may_write_workspace": {"const": false, "description": "External API seats never receive filesystem mutation authority."},
         "require_fused_plan": {"type": "boolean", "description": "Require a valid synthesis artifact before execution can begin."},

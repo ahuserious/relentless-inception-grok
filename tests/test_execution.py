@@ -24,8 +24,8 @@ def _execution_config(**overrides: object) -> dict[str, object]:
         "mode": "grok_handoff",
         "allow_recursive_grok_cli": False,
         "grok_binary": "grok",
-        "model": "grok-4.5-latest",
-        "reasoning_effort": "xhigh",
+        "model": "grok-4.5",
+        "reasoning_effort": "high",
         "timeout_seconds": 3600,
         "remote_models_may_write_workspace": False,
         "require_fused_plan": True,
@@ -133,7 +133,7 @@ class ExecutionHandoffTests(unittest.TestCase):
             native_grok={
                 "enabled": True,
                 "mode": "host_handoff",
-                "executor_model": "grok-4.5-latest",
+                "executor_model": "grok-4.5",
                 "require_gate_after_execution": True,
             },
         )
@@ -152,7 +152,7 @@ class ExecutionHandoffTests(unittest.TestCase):
         self.assertEqual(handoff["lifecycle"]["later_gates"], ["post_execution", "final", "summarize"])
         self.assertEqual(
             handoff["execution_contract"]["native_grok"]["executor_model"],
-            "grok-4.5-latest",
+            "grok-4.5",
         )
         self.assertTrue(handoff["execution_contract"]["native_grok"]["require_gate_after_execution"])
         self.assertTrue(handoff["ready_for_host_workflow"])

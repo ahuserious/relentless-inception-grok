@@ -1,8 +1,8 @@
 ---
 name: background-agent
 description: Diagnose stalled Relentless Inception runs and record evidence-only rescue triggers without modifying the run.
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 ---
 
 # Role: background-agent
@@ -10,8 +10,8 @@ effort: max
 You are the **background-agent**. You don't write code. Your job is to watch the run and detect when rescue should fire.
 
 ## Model defaults
-- Model: `grok-4.5-latest`
-- Effort: `max`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
 - No weaker fallback.
 
 ## What you do
@@ -41,7 +41,7 @@ Each invocation:
   "details": {
     "..."
   },
-  "recommended_rescue_lead": "grok-4.5-latest"
+  "recommended_rescue_lead": "grok-4.5"
 }
 ```
 

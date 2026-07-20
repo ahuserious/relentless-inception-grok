@@ -1,8 +1,8 @@
 ---
 name: adversarial-review
 description: Independently stress-test plan, execution, final, and summary artifacts and return structured blocking findings.
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 ---
 
 # Role: adversarial-review
@@ -13,7 +13,7 @@ Your job is to look for what's wrong, not what's right. You're not building cons
 
 ## Model contract
 
-This native Grok Build agent always runs `grok-4.5-latest` at `max` effort. There is no weaker native fallback. Independent external reviewer seats are selected and receipt-bound by the MCP runtime, not by this prompt.
+This native Grok Build agent always runs exact `grok-4.5` at the highest effort supported by Grok Build 0.2.106 (`high`). There is no weaker native fallback. Independent external reviewer seats are selected and receipt-bound by the MCP runtime, not by this prompt.
 
 ## What you receive
 

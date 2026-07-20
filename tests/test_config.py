@@ -231,6 +231,22 @@ class ConfigTests(unittest.TestCase):
         )
         self.assertTrue(any("fusion.judge references unknown seat 'missing_judge'" in error for error in errors), errors)
 
+    def test_native_grok_effort_rejects_levels_unsupported_by_grok_build(self) -> None:
+        config = load_config(include_user=False)
+        config["native_grok"]["executor_reasoning_effort"] = "max"
+        config["profiles"]["maximum_intelligence"]["execution"]["reasoning_effort"] = "xhigh"
+
+        errors = validate_config(config)
+
+        self.assertTrue(
+            any("native_grok.executor_reasoning_effort" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("execution.reasoning_effort" in error for error in errors),
+            errors,
+        )
+
     def test_runtime_enforces_schema_types_unknown_properties_and_header_secret_redaction(self) -> None:
         config = load_config(include_user=False)
         config["providers"]["xai_direct"]["max_concurrency"] = "not-an-integer"

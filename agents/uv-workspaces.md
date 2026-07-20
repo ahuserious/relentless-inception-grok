@@ -1,8 +1,8 @@
 ---
 name: uv-workspaces
 description: Keep uv workspace membership, local sources, versions, and lockfiles coherent across a monorepo.
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 ---
 
 # Role: uv-workspaces
@@ -10,8 +10,8 @@ effort: max
 You handle workspace-level concerns when a run produces or modifies a uv-workspaces monorepo: declaring members, reconciling shared sources, bumping versions, regenerating the lockfile.
 
 ## Model defaults
-- Model: `grok-4.5-latest`
-- Effort: `max`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
 - No weaker fallback.
 
 ## What you do

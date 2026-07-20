@@ -34,7 +34,7 @@ class RuntimePackageIntegrityTests(unittest.TestCase):
     def test_release_identity_and_runtime_layout_are_consistent(self) -> None:
         default_config = load_config(include_user=False)
 
-        self.assertEqual(__version__, "0.4.0")
+        self.assertEqual(__version__, "0.4.1")
         self.assertEqual(doctor(default_config)["version"], __version__)
         self.assertEqual(DEFAULT_CONFIG_PATH, PLUGIN_ROOT / "config" / "default.json")
         self.assertEqual(CONFIG_SCHEMA_PATH, PLUGIN_ROOT / "schemas" / "config.schema.json")
@@ -128,12 +128,16 @@ class RuntimePackageIntegrityTests(unittest.TestCase):
         self.assertFalse(default_config["providers"]["openrouter"]["enabled"])
 
         native_grok = default_config["native_grok"]
-        self.assertEqual(native_grok["executor_model"], "grok-4.5-latest")
-        self.assertEqual(native_grok["executor_reasoning_effort"], "max")
-        self.assertEqual(native_grok["reviewer_models"], ["grok-4.5-latest"])
-        self.assertEqual(native_grok["reviewer_reasoning_effort"], "max")
-        self.assertEqual(profile["execution"]["model"], "grok-4.5-latest")
-        self.assertEqual(profile["execution"]["reasoning_effort"], "max")
+        self.assertEqual(native_grok["executor_model"], "grok-4.5")
+        self.assertEqual(native_grok["executor_reasoning_effort"], "high")
+        self.assertEqual(native_grok["reviewer_models"], ["grok-4.5"])
+        self.assertEqual(
+            native_grok["reviewer_roles"],
+            ["relentless-inception-grok:adversarial-review"],
+        )
+        self.assertEqual(native_grok["reviewer_reasoning_effort"], "high")
+        self.assertEqual(profile["execution"]["model"], "grok-4.5")
+        self.assertEqual(profile["execution"]["reasoning_effort"], "high")
         self.assertEqual(profile["execution"]["mode"], "grok_handoff")
         self.assertFalse(profile["execution"]["allow_recursive_grok_cli"])
 
@@ -142,6 +146,18 @@ class RuntimePackageIntegrityTests(unittest.TestCase):
                 self.assertEqual(seat["fallback_models"], [])
             if "gpt" in seat["model"].lower():
                 self.assertEqual(seat["model"], "openai/gpt-5.6-sol")
+
+    def test_native_agent_metadata_matches_grok_build_02106(self) -> None:
+        agent_paths = sorted((PLUGIN_ROOT / "agents").glob("*.md"))
+        self.assertTrue(agent_paths)
+
+        for agent_path in agent_paths:
+            with self.subTest(agent=agent_path.name):
+                frontmatter = agent_path.read_text(encoding="utf-8").split("---", 2)[1]
+                self.assertIn("model: grok-4.5\n", frontmatter)
+                self.assertIn("effort: high\n", frontmatter)
+                self.assertNotIn("grok-4.5-latest", frontmatter)
+                self.assertNotIn("effort: max", frontmatter)
 
 
 if __name__ == "__main__":

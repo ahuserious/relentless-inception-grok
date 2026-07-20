@@ -25,7 +25,7 @@ grok plugin details relentless-inception-grok
 grok inspect --json
 ```
 
-Acceptance requires all three skills, every intended agent with valid frontmatter, bundled hooks, and the MCP server to be discovered. A valid manifest with zero skill directories is a failure.
+Acceptance requires all three skills, every intended agent with valid frontmatter, bundled hooks, and the MCP server to be discovered. Host-side subagent discovery must report namespaced IDs such as `relentless-inception-grok:adversarial-review`. Grok Build 0.2.106's top-level `--agent` lookup does not consistently resolve that namespace; use the installed agent-profile file for a headless launch and treat the discovered namespace as the host/subagent identifier. A valid manifest with zero skill directories is a failure.
 
 ## MCP startup
 
@@ -37,7 +37,7 @@ Then use `/relentless-config doctor` and, when billable access is explicitly int
 
 ## Live fusion
 
-A retained live proof must identify every requested and actual model, provider, stage, attempt, response receipt, cost/usage status, synthesis author, exact artifact hash, and gate verdict. Direct xAI defaults must show only `grok-4.5`; native agent definitions must show only `grok-4.5-latest`.
+A retained live proof must identify every requested and actual model, provider, stage, attempt, response receipt, cost/usage status, synthesis author, exact artifact hash, and gate verdict. Direct xAI defaults and native agent definitions must show only exact `grok-4.5`; native Grok Build invocations must use `high`, the strongest supported effort in 0.2.106.
 
 OpenRouter is not part of the local live acceptance campaign when no working credential is available. Do not convert mocked adapter coverage into a live-provider claim.
 

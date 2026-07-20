@@ -18,7 +18,7 @@ flowchart LR
 
 ## Host plane
 
-Grok Build owns workspace access, native subagent spawning, permissions, worktrees, implementation, testing, and user approvals. Every bundled native agent explicitly selects `grok-4.5-latest`. Native agents can be assigned different roles and evidence partitions, but Grok Build supports only one child depth; deeper orchestration stays inside the MCP runtime.
+Grok Build owns workspace access, native subagent spawning, permissions, worktrees, implementation, testing, and user approvals. Every bundled native agent explicitly selects exact `grok-4.5` at `high`, the strongest effort accepted by Grok Build 0.2.106. Installed agent identifiers are plugin-namespaced. Native agents can be assigned different roles and evidence partitions, but Grok Build supports only one child depth; deeper orchestration stays inside the MCP runtime.
 
 The plugin does not silently rewrite user-level Grok model or provider configuration. Native subagents use the host's authenticated model path. A configured Codex CLI role may contribute GPT-5.6 Sol reasoning, but it remains a separate host-controlled seat.
 
@@ -40,7 +40,7 @@ External seats never receive Grok's filesystem, terminal, connectors, approval c
 
 ## Default model topology
 
-The maximum-intelligence profile uses direct xAI `grok-4.5` for every external panel, judge, synthesizer, and reviewer seat at high effort. Native Grok agents use `grok-4.5-latest`. Optional GPT participation uses exact `gpt-5.6-sol`. There are no weaker automatic fallbacks.
+The maximum-intelligence profile uses direct xAI `grok-4.5` for every external panel, judge, synthesizer, and reviewer seat at high effort. Native Grok agents also use exact `grok-4.5` at high effort. Optional GPT participation uses exact `gpt-5.6-sol`. There are no weaker automatic fallbacks.
 
 Role diversity among several Grok 4.5 calls is multi-agent deliberation, not cross-model diversity. Cross-model fusion is present only when a separately configured GPT, Claude, routed, or other provider family contributes a bound report.
 

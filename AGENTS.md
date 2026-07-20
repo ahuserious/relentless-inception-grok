@@ -5,7 +5,7 @@ This repository is the runtime-backed Grok Build plugin. The canonical user work
 ## Release invariants
 
 - Target Grok Build 0.2.106 or newer.
-- Native Grok agents use `grok-4.5-latest`; direct xAI API seats use exact `grok-4.5`.
+- Native Grok agents and direct xAI API seats use exact `grok-4.5`; native agents use `high`, the strongest effort accepted by Grok Build 0.2.106.
 - Optional Codex participation uses exact `gpt-5.6-sol`.
 - Shipped defaults never select Grok 4.3, GPT-5.6 Terra, a cheaper judge, or an unconfigured router.
 - Other provider/model ids remain configurable through the schema; do not hard-code a global allowlist.

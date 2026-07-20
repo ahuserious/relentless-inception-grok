@@ -2,7 +2,7 @@
 
 Relentless Inception is a runtime-backed Grok Build plugin for bounded multi-agent deliberation, generative fusion, exact-artifact adversarial review, and verified execution handoff. It combines the strongest parts of the original Relentless Inception workflow, Batch Create Eval, Gigaprompt, Exaflop, and evidence-first benchmark practice without relying on prompt compliance for budgets, provider dispatch, receipts, or release gates.
 
-Version `0.4.0` targets Grok Build `0.2.106` or newer.
+Version `0.4.1` targets Grok Build `0.2.106` or newer.
 
 ## What is real
 
@@ -18,7 +18,7 @@ The shipped maximum-intelligence profile has no automatic quality downgrade.
 
 | Surface | Default model | Purpose |
 |---|---|---|
-| Grok Build host and native agents | `grok-4.5-latest` | workspace reasoning, implementation, native adversarial review |
+| Grok Build host and native agents | `grok-4.5` at `high` effort | workspace reasoning, implementation, native adversarial review |
 | Direct xAI API seats | `grok-4.5` | independent panel, judge, synthesis, and exact-hash gates |
 | Optional Codex seat/handoff | `gpt-5.6-sol` | cross-family review or execution when Codex is explicitly configured |
 
@@ -70,7 +70,18 @@ The normal lifecycle is:
 6. Native Grok agents implement only after plan and pre-execution gates pass.
 7. Post-execution, final, and summarize gates review the actual diff, tests, provenance, cost ledger, and remaining risk.
 
-Every native agent bundled here explicitly selects `grok-4.5-latest`. Direct xAI seats use exact `grok-4.5`, not an alias. Grok Build `-s/--session-id` applies to interactive sessions in current releases and is ignored in headless mode; use `--prompt-file` for a fresh headless dispatch and `--resume` only when continuation is intended.
+Every native agent bundled here explicitly selects exact `grok-4.5` at `high`, the strongest effort exposed by Grok Build 0.2.106. Host-side subagent discovery reports plugin agents under namespaced IDs such as `relentless-inception-grok:adversarial-review`. The 0.2.106 top-level `grok --agent` launcher does not resolve that discovered namespace consistently, so headless validation should pass the installed profile file explicitly. Direct xAI seats also use exact `grok-4.5`, not an alias. Grok Build `-s/--session-id` applies to interactive sessions in current releases and is ignored in headless mode; use `--prompt-file` for a fresh headless dispatch and `--resume` only when continuation is intended.
+
+A bounded native-agent smoke can be run without invoking the external fusion panel:
+
+```bash
+RI_GROK_PLUGIN_PATH="$(grok plugin list --json | jq -r \
+  '.[] | select(.name == "relentless-inception-grok") | .path')"
+grok --agent "$RI_GROK_PLUGIN_PATH/agents/adversarial-review.md" \
+  --model grok-4.5 --reasoning-effort high --max-turns 1 \
+  --no-subagents --disable-web-search --no-plan --tools '' --verbatim \
+  --single "Do not call tools. Review this exact artifact and return the required JSON."
+```
 
 ## Configuration and credentials
 

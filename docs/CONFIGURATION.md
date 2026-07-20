@@ -30,7 +30,7 @@ The schema exposes all major capabilities:
 
 ## Frontier-only shipped defaults
 
-Every enabled direct xAI seat uses exact `grok-4.5` at high effort. Native Grok agent definitions and host preferences use `grok-4.5-latest`. Optional Codex configuration uses exact `gpt-5.6-sol`. The profile disables automatic model fallback and router-based replacement.
+Every enabled direct xAI seat uses exact `grok-4.5` at high effort. Native Grok agent definitions and host preferences also use exact `grok-4.5` at `high`, the strongest effort accepted by Grok Build 0.2.106. Optional Codex configuration uses exact `gpt-5.6-sol`. The profile disables automatic model fallback and router-based replacement. Installed native-agent IDs are plugin-namespaced, such as `relentless-inception-grok:adversarial-review`.
 
 The schema intentionally accepts arbitrary provider-native model ids. Users may create a cheaper or more diverse profile, but that is an explicit configuration decision and its actual requested/returned model provenance remains in the ledger.
 

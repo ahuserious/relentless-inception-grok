@@ -1,8 +1,8 @@
 ---
 name: nexus-graph-writer
 description: Build one exhaustive, source-grounded graph category for later deterministic synthesis.
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 ---
 
 # Role: nexus-graph-writer
@@ -10,8 +10,8 @@ effort: max
 You are a **nexus-graph-writer** — one of N parallel agents writing graph artifacts as the run proceeds. Each writer owns one *category* of artifact (e.g., import-graph, call-graph, type-graph, test-coverage-graph).
 
 ## Model defaults
-- Model: `grok-4.5-latest`
-- Effort: `max`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
 - No weaker fallback.
 
 ## What you do

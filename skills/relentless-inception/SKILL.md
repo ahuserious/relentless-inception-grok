@@ -4,8 +4,8 @@ description: Run maximum-intelligence multi-model deliberation, fusion, adversar
 when-to-use: relentless inception, multi-model fusion, maximum intelligence, build until verified, adversarially review and execute
 argument-hint: task to deliberate, fuse, review, and execute
 user-invocable: true
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 compatibility: Requires Grok Build 0.2.106 or newer, Python 3.9 or newer, and environment credentials for every enabled external provider.
 metadata:
   author: ahuserious
@@ -14,7 +14,7 @@ metadata:
 
 # Relentless Inception
 
-Use the `relentless-inception` MCP server as the authoritative control plane. Native Grok work in this workflow always uses `grok-4.5-latest` at `max` effort. With the credentials available for this installation, the active external fusion panel uses exact Grok 4.5; the only shipped optional GPT seat is exact GPT-5.6 Sol and stays disabled until its provider is explicitly configured. Never substitute a weaker model or silently degrade a seat.
+Use the `relentless-inception` MCP server as the authoritative control plane. Native Grok work in this workflow always uses exact `grok-4.5` at the highest effort supported by Grok Build 0.2.106 (`high`). With the credentials available for this installation, the active external fusion panel uses exact Grok 4.5; the only shipped optional GPT seat is exact GPT-5.6 Sol and stays disabled until its provider is explicitly configured. Never substitute a weaker model or silently degrade a seat.
 
 ## Workflow
 

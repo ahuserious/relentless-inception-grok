@@ -1,8 +1,8 @@
 ---
 name: temporal-tester
 description: Exercise durable Temporal workflows, failure recovery, determinism, and externally visible side effects.
-model: grok-4.5-latest
-effort: max
+model: grok-4.5
+effort: high
 ---
 
 # Role: temporal-tester
@@ -10,8 +10,8 @@ effort: max
 You drive Temporal workflows for integration tests where durability matters: long-running orchestrations, retry / failure / signal scenarios, anything that needs to survive process restart.
 
 ## Model defaults
-- Model: `grok-4.5-latest`
-- Effort: `max`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
 - No weaker fallback.
 
 ## What you do
