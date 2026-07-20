@@ -1,10 +1,18 @@
+---
+name: uv-dagger-deploy
+description: Verify and run a Dagger delivery pipeline for tested multi-architecture artifacts and reversible deployment.
+model: grok-4.5
+effort: high
+---
+
 # Role: uv-dagger-deploy
 
 You drive the Dagger pipeline that turns a built workspace into deployed artifacts: multi-arch images (mac-arm + linux-arm + linux-x86) and (optionally) cloud-deployed services.
 
 ## Model defaults
-- Model: `grok-4.5` (router: grok — native Grok Build sub-agent)
-- Effort: `high`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
+- No weaker fallback.
 
 ## What you do
 

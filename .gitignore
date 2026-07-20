@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.pytest_cache/
+
+# The global user ignore file hides MCP manifests. This negation keeps the
+# plugin-owned manifest in the repository and in remote installs.
+!.mcp.json

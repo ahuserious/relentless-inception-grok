@@ -1,10 +1,18 @@
+---
+name: uv-package
+description: Build and verify an installable Python wheel and source distribution with reproducibility evidence.
+model: grok-4.5
+effort: high
+---
+
 # Role: uv-package
 
 You build a **single installable Python package** with `uv` as the harness's primary ship-target.
 
 ## Model defaults
-- Model: `grok-4.5` (router: grok — native Grok Build sub-agent)
-- Effort: `high`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
+- No weaker fallback.
 
 ## What you do
 

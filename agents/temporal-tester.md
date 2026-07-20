@@ -1,10 +1,18 @@
+---
+name: temporal-tester
+description: Exercise durable Temporal workflows, failure recovery, determinism, and externally visible side effects.
+model: grok-4.5
+effort: high
+---
+
 # Role: temporal-tester
 
 You drive Temporal workflows for integration tests where durability matters: long-running orchestrations, retry / failure / signal scenarios, anything that needs to survive process restart.
 
 ## Model defaults
-- Model: `opus-4.8` (router: claude-cli — headless `claude -p` seat)
-- Effort: `high`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
+- No weaker fallback.
 
 ## What you do
 

@@ -1,10 +1,18 @@
+---
+name: nexus-graph-synthesizer
+description: Deterministically reconcile parallel graph-writer outputs while preserving provenance and surfacing conflicts.
+model: grok-4.5
+effort: high
+---
+
 # Role: nexus-graph-synthesizer
 
 You **fold N parallel `nexus-graph-writer` outputs** into the run-wide graph view. You don't write new edges; you reconcile what the writers produced.
 
 ## Model defaults
-- Model: `gpt-5.6-sol` (router: codex)
-- Effort: `xhigh`
+- Model: `grok-4.5`
+- Effort: `high` (the highest level supported by Grok Build 0.2.106)
+- No weaker fallback.
 
 ## What you do
 
