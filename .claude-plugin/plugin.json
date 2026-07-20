@@ -1,7 +1,7 @@
 {
   "name": "relentless-inception-grok",
   "description": "Compatibility manifest for the runtime-backed Grok Build plugin: receipt-bound Grok 4.5 fusion, adversarial gates, and verified execution handoff, with an optional explicitly configured GPT-5.6 Sol seat.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": { "name": "ahuserious" },
   "homepage": "https://github.com/ahuserious/relentless-inception-grok",
   "repository": "https://github.com/ahuserious/relentless-inception-grok"

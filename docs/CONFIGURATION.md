@@ -58,3 +58,25 @@ Optional `secret_env_files` entries must be owner-owned regular files with mode 
 OpenRouter per-seat routing and native Fusion parameters remain displayable, including provider order/allowlists, fallback policy, data-collection/ZDR preferences, quantization, throughput/latency/price preferences, analysis models, comparative model, tool-call limits, and reasoning settings.
 
 Those paths were not exercised live in this local campaign because a working OpenRouter credential was unavailable. They remain covered by schema, request-shape, failure, accounting, and mock-response tests. Run `provider_models` and a deliberately budgeted `provider_test` before making a routed seat load-bearing. Native OpenRouter Fusion probing is intentionally refused by the cheap probe because one request can fan out into several billable calls.
+
+## Settings map and enforcement owner
+
+The schema is the complete field catalog; this map helps distinguish runtime-enforced settings from host-workflow policy.
+
+| Category | Representative settings | Enforcement owner |
+|---|---|---|
+| Provider transport | type, base URL, endpoint paths, timeout, retries, retry statuses, concurrency, capabilities | MCP runtime |
+| Provider routing | OpenRouter order/only/ignore, fallbacks, ZDR/data collection, quantization, throughput/latency/price preferences | MCP runtime request builder plus returned-route provenance |
+| Credentials | environment key names, `secret_env_files`, header-to-environment mapping | Config validator and provider registry |
+| Seat identity | provider, exact model, role, persona, context lens, effort, schema, output/tool limits, pricing | Config validator and MCP runtime |
+| Fusion topology | required/optional panel, judge, synthesizer, native Fusion seat, anonymity, panel cap, degradation, quality floor | MCP orchestrator |
+| Adversarial gates | reviewer roster, quorum, exact artifact hash, stage enablement, amendment count | MCP orchestrator; host invokes lifecycle stages |
+| Budgets | attempts, calls, input/output/reasoning/total tokens, tool calls, wall time, provider and total cost, approval threshold | MCP budget ledger; host owns user approval workflow |
+| Persistence | data root, raw response retention, ledger schema, resume, kill files, atomic writes | MCP state/runtime |
+| Privacy | external-provider allow/deny, storage flags, redaction, path handling, evidence retention | Runtime for transport/state; host for workspace evidence selection |
+| Rescue | transport retries, circuit threshold, model/seat fallbacks, native-to-client fallback, degradation | MCP provider/orchestrator |
+| Native Grok | executor/reviewer model and effort, namespaced roles, recursive CLI permission | Grok Build host and execution handoff |
+| Execution | mode, required plan/pre/post gates, sandbox/approval policy, tests, diff review, fix cycles | Grok Build host using hash-bound handoff |
+| Observability | requested/actual model, route, cost/usage completeness, receipts, warnings | MCP ledger and persisted semantic artifacts |
+
+Configuration cannot grant external seats Grok's filesystem or native tools. Likewise, a displayed host-policy field does not make the MCP subprocess capable of enforcing Grok UI permissions. The relevant owner must consume and verify each field.
