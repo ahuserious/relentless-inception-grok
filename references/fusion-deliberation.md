@@ -1,5 +1,7 @@
 # Multi-model fusion deliberation
 
+> **Provenance note:** this reference documents the pre-v0.4 shell/skill edition and retains its historical transports, paths, and model examples. It is not the runtime-backed plugin's current configuration contract. For v0.4 behavior, use [`docs/FUSION_DELIBERATION.md`](../docs/FUSION_DELIBERATION.md), [`docs/CONFIGURATION.md`](../docs/CONFIGURATION.md), and `config/default.json`.
+
 The signature feature of this skill. Every plan / phase / summarize gate is not a single
 reviewer but a **fusion deliberation**: several independent panelists review the artifact, a
 cheap judge structures their reviews, and a strong fuser writes the final verdict. The

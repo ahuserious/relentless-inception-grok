@@ -2,6 +2,10 @@
 
 Relentless Inception is a runtime-backed Grok Build plugin for bounded multi-agent deliberation, generative fusion, exact-artifact adversarial review, and verified execution handoff. It combines the strongest parts of the original Relentless Inception workflow, Batch Create Eval, Gigaprompt, Exaflop, and evidence-first benchmark practice without relying on prompt compliance for budgets, provider dispatch, receipts, or release gates.
 
+![Original Relentless Inception fusion gate with Map and Panel complete and Fuse in progress](docs/img/fusion-panel-fuse.png)
+
+> The screenshot is a lineage capture from the original Claude-hosted edition. It illustrates the shared Map → Panel → Fuse mental model, but its Fable/Claude labels are not Grok Build's current UI or shipped topology. See the [Grok-native fusion walkthrough](docs/FUSION_DELIBERATION.md) for the exact mapping.
+
 Version `0.4.1` was validated on Grok Build `0.2.106`. Newer Grok Build versions require compatibility retesting; package validation alone does not prove model catalog, agent namespace, effort, hook, or headless-launch compatibility.
 
 ## What is real
@@ -11,6 +15,19 @@ Version `0.4.1` was validated on Grok Build `0.2.106`. Newer Grok Build versions
 - External provider seats receive only the bounded packet sent to the MCP tool. They cannot inspect or change the local workspace.
 - Hooks provide turn-end guidance only. Grok hooks fail open on hook errors, so the MCP runtime is the hard enforcement boundary.
 - There is no hidden settings panel. `/relentless-config` exposes the complete schema and validated configuration tools inside Grok Build.
+
+## Why use the Grok Build edition
+
+| Benefit | What it means in practice |
+|---|---|
+| Native Grok execution | The Grok 4.5 host owns tools, permissions, worktrees, implementation, and tests; 14 bundled agent profiles provide namespaced specialist roles at `high` effort. |
+| Direct Grok 4.5 fusion | The default external panel, judge, synthesizer, and exact-artifact reviewers all request exact `grok-4.5`, with no weaker automatic model fallback. |
+| Optional cross-family seats | GPT-5.6 Sol, direct OpenAI/Anthropic, OpenRouter, native OpenRouter Fusion, and trusted/private compatible routers can be enabled explicitly. |
+| Synthesis is not voting | A comparative judge maps disagreement, then a fresh synthesizer produces a new answer and preserves supported lone-minority findings. |
+| Review binds to bytes | Reviewers gate the exact artifact SHA-256 and byte-identical evidence before Grok receives an execution handoff. |
+| Enforcement lives below prompts | The MCP runtime owns provider dispatch, structured outputs, receipts, budgets, cancellation, resume, and gate state; hooks remain UX guidance. |
+
+Use it when a wrong plan or implementation is expensive, the task needs several expert perspectives, or completion must be backed by retained evidence. For a small edit, exploratory conversation, or work where several frontier calls would not affect the decision, ordinary Grok Build is simpler and cheaper.
 
 ## Frontier-only defaults
 
@@ -70,6 +87,22 @@ The normal lifecycle is:
 6. Native Grok agents implement only after plan and pre-execution gates pass.
 7. Post-execution, final, and summarize gates review the actual diff, tests, provenance, cost ledger, and remaining risk.
 
+```text
+goal + bounded evidence
+        ↓
+independent provider seats
+        ↓
+anonymous comparative diagnosis
+        ↓
+fresh minority-preserving synthesis
+        ↓
+exact-hash adversarial gate
+        ↓
+Grok plan/pre-execution gates → native agents → post/final gates
+```
+
+The judge is diagnostic rather than sovereign. It identifies consensus, contradictions, partial coverage, unique insights, minority findings, blind spots, and verification priorities. The synthesizer sees the raw reports and writes a new result; it may not decide by vote or average away a supported lone finding. Grok then remains responsible for local evidence collection and every tool or workspace action.
+
 Every native agent bundled here explicitly selects exact `grok-4.5` at `high`, the strongest effort exposed by Grok Build 0.2.106. Host-side subagent discovery reports plugin agents under namespaced IDs such as `relentless-inception-grok:adversarial-review`. The 0.2.106 top-level `grok --agent` launcher does not resolve that discovered namespace consistently, so headless validation should pass the installed profile file explicitly. Direct xAI seats also use exact `grok-4.5`, not an alias. Grok Build `-s/--session-id` applies to interactive sessions in current releases and is ignored in headless mode; use `--prompt-file` for a fresh headless dispatch and `--resume` only when continuation is intended.
 
 A bounded native-agent smoke can be run without invoking the external fusion panel:
@@ -82,6 +115,8 @@ grok --agent "$RI_GROK_PLUGIN_PATH/agents/adversarial-review.md" \
   --no-subagents --disable-web-search --no-plan --tools '' --verbatim \
   --single "Do not call tools. Review this exact artifact and return the required JSON."
 ```
+
+For annotated screenshots, the exact native/external boundary, the current seat map, and failure behavior, read [Fusion Deliberation in Grok Build](docs/FUSION_DELIBERATION.md).
 
 ## Configuration and credentials
 
@@ -98,6 +133,12 @@ The runtime stores only credential environment-variable names such as:
 Never put plaintext keys in JSON, agent Markdown, hooks, repository files, or Grok's plugin manifest. The runtime can optionally read an explicitly configured owner-only (`0600`) static environment file; it never invokes a shell and never returns the values through configuration or doctor tools. Native Grok agents use the host's existing login. The plugin does not read or copy `~/.grok/auth.json`.
 
 OpenRouter is implemented and tested with mocks, but was not called in the local release campaign because no working OpenRouter credential was available. Direct xAI Grok 4.5 was exercised live.
+
+### Inspect before spending
+
+Start with `/relentless-config show`, `/relentless-config schema`, and `/relentless-config doctor`. The underlying read-only MCP surfaces are `config_show`, `config_schema`, `config_get`, `config_validate`, `doctor`, and `provider_models`.
+
+`provider_test` is an opt-in completion call and may be billable. It intentionally refuses OpenRouter native Fusion because one probe can fan out into several calls. The shipped budget values are hard ceilings, not a cost estimate for every run; lower `profiles.maximum_intelligence.budgets` when the task does not justify them.
 
 ## Evidence and scope of claims
 
@@ -148,12 +189,36 @@ docs/                          architecture, configuration, security, validation
 
 Legacy `assets/`, `references/`, and `scripts/` are retained temporarily for provenance. They are not the v0.4 execution path and must not be installed as hooks or used for provider dispatch.
 
+## What this edition carries forward
+
+| Lineage | Grok Build edition |
+|---|---|
+| Relentless Inception | phased work, explicit checkpoints, bounded rescue, continuation state, and proof-based completion |
+| Batch Create Eval | independent work units, exact acceptance criteria, realistic shakedowns, and separate task/harness verdicts |
+| Gigaprompt | stable evidence packets, explicit handoffs, context checkpoints, and verification before declaring done |
+| Exaflop | deliberately different expert lenses, parallel first passes, bounded escalation, and hard time/cost limits |
+| TrustedRouter/OpenRouter fusion research | generative synthesis over voting, raw-panel preservation, strongest-seat synthesis, and protection for lone-correct evidence |
+
+The original planning modes (`staff-up`, `kitchen-sink-monorepo`, `lawyer-up`) and execution modes (`gigaprompt`, `proof-loops`, `skynet`, `exaflop-infiniloop`) remain useful provenance and prompting patterns under `references/`. They are not hidden switches in the v0.4 MCP runtime. The authoritative behavior is the schema, the selected profile, the installed Grok agent definitions, and the runtime state machine.
+
 ## Design lineage
 
 - Relentless Inception: phased execution, checkpoints, rescue, and explicit handoff.
 - Batch Create Eval: independent work units, exact acceptance criteria, and realistic shakedowns.
 - Gigaprompt: evidence-backed completion, context checkpoints, and stable-artifact review.
 - Exaflop: deliberately different expert perspectives with hard time and cost limits.
-- TrustedRouter/OpenRouter fusion research: generative synthesis over voting, cheap structured comparison, strongest available fuser, and preservation of lone-correct minority evidence.
+- TrustedRouter/OpenRouter fusion research: generative synthesis over voting, structured comparison, strongest available fuser, and preservation of lone-correct minority evidence. The shipped maximum-intelligence profile nevertheless keeps the judge on Grok 4.5 rather than silently applying a cheaper default.
 
 See [architecture](docs/ARCHITECTURE.md), [configuration](docs/CONFIGURATION.md), [security](docs/SECURITY.md), and [validation](docs/VALIDATION.md).
+
+## Documentation map
+
+| Guide | Use it for |
+|---|---|
+| [Fusion Deliberation](docs/FUSION_DELIBERATION.md) | visual mental model, current Grok topology, native/external split, gates, and lineage screenshots |
+| [Configuration](docs/CONFIGURATION.md) | every provider, seat, routing, fusion, gate, budget, privacy, rescue, evidence, and execution category |
+| [Architecture](docs/ARCHITECTURE.md) | Grok host boundary, MCP enforcement, receipts, resume, and handoff authority |
+| [Security](docs/SECURITY.md) | credentials, egress, prompt injection, state integrity, and workspace safety |
+| [Validation](docs/VALIDATION.md) | offline, package, MCP, live-provider, and task-harness acceptance layers |
+| [Release Evidence](docs/RELEASE_EVIDENCE.md) | exactly observed live behavior and explicit non-claims |
+| [Benchmark Protocol](docs/BENCHMARK_PROTOCOL.md) | future Terminal-Bench/DeepSWE acceptance and retained evidence requirements |
